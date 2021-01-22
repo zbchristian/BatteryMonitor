@@ -29,6 +29,8 @@ s100 - set current capacity to 100% (full)
 s000 - set current capacity to 0% (empty)
 scxxxxxx - set nominal capacity to xxxxxx/10 Ah
 s%xxxx - set percentage of the current capacity to xxxx/10% (e.g. s%785 -> 78.5%)
+soxxxx - set the current offset in milli Amps
+sixxxx - set the pre-shared pass phrase used for the hash value of the sign on message
 
 
 CZ July 2020
