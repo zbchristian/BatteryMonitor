@@ -5,8 +5,9 @@ Measure and display the
 - the voltage of the battery (V)
 - the current flowing from/to the battery (A)
 
-of a camper/mobil home 12V battery.
+of a camper/mobil home 12V battery on an Android Smartphone.
 
+Prototype exists, but the schematic not completed yet.
 
 Hardware
 ========
@@ -39,6 +40,15 @@ Software
 ========
 The Arduino IDE is used for the code development.
 
-The BLE connection is initialized by the phone. A sign-on message is expected by the ESP32. This is a hash value of the current time (salt) and a pre-shared pass phrase. 
-If the message is not received, the BLE connection is terminated.
-Data are send to the APP every second as a block of 20 bytes. The values are 16 bit integer values, which have been scaled to reflect the predefined number og significant digits. 
+- The BLE connection is initialized by the phone
+- A sign-on message is expected by the ESP32. This is a hash value of the current time (salt) and a pre-shared pass phrase. 
+- If the message is not received, the BLE connection is terminated.
+- Data are send to the APP every second as a block of 20 bytes. The values are 16 bit integer values, which have been scaled to reflect the predefined number og significant digits. 
+
+To Come
+=======
+Use ADS1115 16bit ADC board instead of internal ADC.
+
+Advantage:
+- less noise
+- internal amplifier
