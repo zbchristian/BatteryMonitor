@@ -20,19 +20,23 @@ Current Sensor
 ==============
 A split core current sensor with a Hall sensor is used to measure the current.
 
+Advantage: sensor works contactless. No need to mess with the cabling, since the sensor is just placed around one of the battery cables.
+
 Utilized model: YHDC HSTS016L +-20A
 - 2.5+-0.625V (buffered by an OpAmp) 
 - reference voltage 2.5V (buffered by an OpAmp) 
 
-The resolution is about 50mA.
+The reached resolution is about 50mA.
 
 Analog to digital conversion
 ============================
-Internal 12-bit ADC of the ESP32 processor. The ADC is quite noisy and an averaging is used in order to achieve the resolution of about 50mA.
+Internal 12-bit ADC of the ESP32 processor. The ADC is quite noisy and an averaging (low pass filter) is used in the software 
+in order to achieve the resolution of about 50mA.
 
 Android APP
 ===========
-Developed with the MIT AppInventor
+Developed with the MIT App-Inventor2
+- Low energy bluetooth (BLE) connection to the ESP32
 - Main Screen with current, voltage, capacity
 - Settings window 
 
