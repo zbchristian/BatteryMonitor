@@ -18,9 +18,9 @@ Hardware
 * ESP32 board
 * Current sensor to measure the magnetic field 
 * Step-down regulator (DC-DC Buck converter)
- * Input: 10V-20V
- * Output: 5V (fixed or adjustable)
- * Current: 1A
+  * Input: 10V-20V
+  * Output: 5V (fixed or adjustable)
+  * Current: 1A
 * Dual OpAmp
 
 Current Sensor
