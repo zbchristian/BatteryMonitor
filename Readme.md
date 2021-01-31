@@ -8,10 +8,10 @@ Measure and display the
 of a camper/mobil home 12V battery on an Android Smartphone.
 
 Prototype exists, but the schematic not completed yet.
-<div style="width:300px>
+<p style="width:300px>
 ![Prototype](images/prototype_w_sensor_2000px.jpg?raw=true "Prototype of the Battery Monitor")
 ![Prototype close up](images/prototype_labeled_2000px.jpg?raw=true "Prototype of the Battery Monitor (close up)")
-</div>
+</p>
 
 Hardware
 ========
@@ -43,10 +43,11 @@ Developed with the MIT App-Inventor2
 - Low energy bluetooth (BLE) connection to the ESP32
 - Main Screen with current, voltage, capacity
 - Settings window 
-<div style="width:300px>
+
+<p style="width:300px>
 ![Battery Monitor APP main screen](images/app_main.png?raw=true "Battery Monitor APP - main screen")
 ![Battery Monitor APP settings](images/app_settings.png "Battery Monitor APP - settings")
-</div>
+</p>
 
 Software
 ========
