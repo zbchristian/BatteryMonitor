@@ -9,9 +9,9 @@ of a camper/mobil home 12V battery on an Android Smartphone.
 
 Prototype exists, but the schematic not completed yet.
 
-![Prototype](images/prototype_w_sensor_2000px.jpg?raw=true "Prototype of the Battery Monitor")  <!-- .element width="20%" -->
+![Prototype](images/prototype_w_sensor_2000px.jpg?raw=true "Prototype of the Battery Monitor")<!-- .element width="20%" -->
 
-![Prototype close up](images/prototype_labeled_2000px.jpg?raw=true "Prototype of the Battery Monitor (close up)")  <!-- .element width="20%" -->
+![Prototype close up](images/prototype_labeled_2000px.jpg?raw=true "Prototype of the Battery Monitor (close up)")<!-- .element width="20%" -->
 
 
 Hardware
@@ -45,9 +45,9 @@ Developed with the MIT App-Inventor2
 - Main Screen with current, voltage, capacity
 - Settings window 
 
-![Battery Monitor APP main screen](images/app_main.png?raw=true "Battery Monitor APP - main screen")  <!-- .element width="300px" -->
+![Battery Monitor APP main screen](images/app_main.png?raw=true "Battery Monitor APP - main screen")<!-- .element width="300px" -->
 
-![Battery Monitor APP settings](images/app_settings.png "Battery Monitor APP - settings")  <!-- .element width="300px" -->
+![Battery Monitor APP settings](images/app_settings.png "Battery Monitor APP - settings")<!-- .element width="300px" -->
 
 
 Software
