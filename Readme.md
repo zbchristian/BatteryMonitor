@@ -8,10 +8,10 @@ Measure and display the
 of a camper/mobil home 12V battery on an Android Smartphone.
 
 Prototype exists, but the schematic not completed yet.
-<p style="width:300px>
-![Prototype](images/prototype_w_sensor_2000px.jpg?raw=true "Prototype of the Battery Monitor")
-![Prototype close up](images/prototype_labeled_2000px.jpg?raw=true "Prototype of the Battery Monitor (close up)")
-</p>
+
+![Prototype](images/prototype_w_sensor_300px.jpg?raw=true "Prototype of the Battery Monitor")
+![Prototype close up](images/prototype_labeled_300px.jpg?raw=true "Prototype of the Battery Monitor (close up)")
+
 
 Hardware
 ========
@@ -44,10 +44,10 @@ Developed with the MIT App-Inventor2
 - Main Screen with current, voltage, capacity
 - Settings window 
 
-<p style="width:300px>
+
 ![Battery Monitor APP main screen](images/app_main.png?raw=true "Battery Monitor APP - main screen")
 ![Battery Monitor APP settings](images/app_settings.png "Battery Monitor APP - settings")
-</p>
+
 
 Software
 ========
