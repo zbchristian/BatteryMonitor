@@ -31,6 +31,7 @@ scxxxxxx - set nominal capacity to xxxxxx/10 Ah
 s%xxxx - set percentage of the current capacity to xxxx/10% (e.g. s%785 -> 78.5%)
 soxxxx - set the current offset in milli Amps
 sixxxx - set the pre-shared pass phrase used for the hash value of the sign on message
+ghxxxx - get history data (xxxx = time window in secs, if 0 : send all data) 
 
 
 CZ July 2020
@@ -61,6 +62,7 @@ extern "C" {
 Preferences persistentStore;  // provides access to the Flash memory
 
 int16_t scale16(float ,float );
+void clearStats(void);
 void calcStats();
 
 BLEServer *pServer=NULL;
@@ -89,6 +91,8 @@ DRAM_ATTR unsigned long msTime;
 
 #define RSENSOR       0.26089   // measured value - voltage divider - 18k/(18k+51k)
 #define R12V          0.02907   // measured - ideal 1/34
+
+#define chargeEff		0.95	// charging efficiency - AGM/GEL: ~95% , standard lead acid: ~80%
 
 // define time (ms) between the execution of certains functional codes
 #define doSave  30000 // ms to save data to EPPROM 
@@ -154,6 +158,8 @@ double VcalADC7_4(double adc)  { return 0.0002280*adc+0.06694; } // calibrated v
 double V2Amps(double dV)  { return 144.806*dV; } // calibrated voltage to current function - includes already RSENSOR
 
 double getCurrent(double adcRef, double adcSens) { return V2Amps(VcalADC7_4(adcSens)-VcalADC7_4(adcRef)); }
+
+#define sign(x) ((x>=0) ? 1 : -1)
 
 // nominal and current battery capacity is retrieved/stored from/in Flash memory 
 void persistentBatCapacity(boolean isGet=true) {
@@ -281,7 +287,7 @@ class MyCallbacks: public BLECharacteristicCallbacks {
           receiveSignon((char*)rx.substr(0).c_str(),(int)rx.length());
         } else {  // valid connection          
           unsigned int val;
-          if(rx.compare(0,1,"s") == 0) {  // its a set command
+          if(rx.compare(0,1,"s") == 0 || rx.compare(0,1,"g") == 0 ) {  // its a set/get command
             // retrieve the value
             val = atoi(rx.substr(2).c_str());
             Serial.print("Received set command ");
@@ -292,20 +298,26 @@ class MyCallbacks: public BLECharacteristicCallbacks {
             if(rx.compare(0,2,"sc") == 0 && xval >= 0.0 && xval < 10000.0) {  // received set capacity command
                BatCapNominal = xval;
                persistentBatCapacity(false);            
+               clearStats();              
             } else if(rx.compare(0,2,"s%") == 0 && xval >= 0.0 && xval <= 100.0) { // received set % level command
                BatCap = BatCapNominal*xval/100.0;
-               persistentBatCapacity(false);                      
+               persistentBatCapacity(false);
+               clearStats();              
             } else if(rx.compare(0,2,"s1") == 0) { // received set to full command
                BatCap = BatCapNominal;
                persistentBatCapacity(false);
+               clearStats();              
             } else if(rx.compare(0,2,"s0") == 0) { // received set to empty command
                BatCap = 0.0;
                persistentBatCapacity(false);
+               clearStats();              
             } else if(rx.compare(0,2,"so") == 0) { // received set current offset command
                BatIoff=val/1000.;  // current offset given in mA
                persistentBatCapacity(false);
             Serial.print(" BatIoff = ");
             Serial.println(BatIoff);
+            } else if(rx.compare(0,2,"gh") == 0) { // received get history command
+               sendHistory();
             } else if(rx.compare(0,2,"si") == 0 && isNoSignon) { // received set new signon message and correct mode (button pressed)
                ncharSignon=atoi(rx.substr(2,2).c_str());  // 2 digits to set the length of the message
                isReceiveSignon=ncharSignon>0 && ncharSignon<99;
@@ -364,12 +376,8 @@ void setup() {
   histAh = (float*)malloc(nhistory*sizeof(float));
   histVolts = (float*)malloc(nhistory*sizeof(float));
 
-  for (int i=0; i<nhistory;++i) {
-    histAmps[i] = -1000.0;
-    histAh[i] = -1000.0;
-    histVolts[i] = -1000.0;    
-  }
-
+  clearStats();
+  
   // Create the BLE Device
   BLEDevice::init("CZ_Battery_Monitor"); // Give it a name
 
@@ -439,7 +447,7 @@ void setupTimer() {
 
 int nAvr=0;
 int nADC=0;
-
+double eff;
 void loop() {
 
   if( isSave ) {
@@ -468,9 +476,13 @@ void loop() {
       filteredVref = filteredVref - min(1.0/nADC,betaADC)*(filteredVref - (double)adc1_get_raw(adcSensorVref)); 
     }
     VBat = get12V(filtered12V);
+//    sprintf(txt,"Volts %10.2f, adc %10.2f - ",VBat,filtered12V);       
+//    Serial.println(txt);
+
     AmpsBat = getCurrent(filteredVref,filteredSensor);
-    AmpsBat = (long)(AmpsBat/currentBin)*currentBin + BatIoff;
-    BatCap += AmpsBat*doADC/1000/3600.0; // calculate the change of the battery capacity  
+    AmpsBat = (long)(AmpsBat/currentBin)*currentBin - BatIoff;
+    eff = sign(AmpsBat)<0 ? 1.0 : chargeEff;	// take efficiency of charging (I>0) into account 	
+    BatCap += AmpsBat*doADC/1000/3600.0*eff; // calculate the change of the battery capacity
     if ( BatCap <= 0.0) BatCap = 0.0;
 
     ++nAvr;
@@ -512,6 +524,7 @@ void loop() {
     float PowerBat = VBat*AmpsBat; // power
     sprintf(txt,"%10.4f,%10.4f,%10.4f",VcalADC6(filtered12V), VcalADC7_4(filteredSensor), VcalADC7_4(filteredVref));
     Serial.println(txt);
+    memset(txValue, 0, sizeof(txValue));
     txValue[0] = 0; // mark data as current values
     txValue[1] = scale16(VBat,100); // transmit with 2 digits precision
     txValue[2] = scale16(AmpsBat,100);  // transmit with 2 digits precision
@@ -529,7 +542,8 @@ void loop() {
 //    txValue[9] = scale16(filteredVref,1);
 
     pCharacteristic_tx->setValue((uint8_t*)txValue,20); // To send 10 uint16 values
-    pCharacteristic_tx->notify(); // Send the value to the app!
+    pCharacteristic_tx->notify(); // Send the values to the app!
+    memset(txValue, 0, sizeof(txValue));
 
     txValue[0] = 1; // mark data as statistics
     txValue[1] = scale16(statAh[0],10); // transmit with 1 digits precision
@@ -543,7 +557,7 @@ void loop() {
 
 //    delay(100); // wait a bit
     pCharacteristic_tx->setValue((uint8_t*)txValue,20); // To send 10 uint16 values
-    pCharacteristic_tx->notify(); // Send the value to the app!
+    pCharacteristic_tx->notify(); // Send the values to the app!
 
 //    Serial.print("*** Goto sleep ...");
 //    esp_sleep_enable_timer_wakeup(100*1000);
@@ -588,6 +602,8 @@ void calcStats() {
     if(n < n24h) {
       statAh[3] += histAmps[idx]*histBin/1000./3600.;  // calculate Ah 
       statWh[3] += histAmps[idx]*histVolts[idx]*histBin/1000.0/3600.; // calculate Wh
+//      statAh[3] += histAh[idx];  // add up Ah - incorrect
+//      statWh[3] += histAh[idx]*histVolts[idx]; // calculate Wh  - incorrect
   sprintf(txt,"n %d, idx %d, %10.4f ",n,idx,statAh[3]);       
   Serial.println(txt);
     }
@@ -606,8 +622,50 @@ void calcStats() {
   Serial.println(txt);
 }
 
+void sendHistory() {
+  Serial.println("Send History");
+  int16_t txValue[10]={0.0};
+  int i=0;
+  int n=0;
+  int idx = histPos-1;  // start index
+  while (i++ < nhistory && idx >= 0 && idx != histPos && histAh[idx] > -999 ) {
+    sprintf(txt,"i = %d, idx = %d, histAh = %d",i, idx, histAh[idx]);
+    Serial.println(txt);
+    --idx;       
+    ++n;  // get number of entries in history array
+  }
+  if (n==0) return;  // nothing to send
+  sprintf(txt,"n = %d",n);
+  Serial.println(txt);
 
-#define sign(x) ((x>=0) ? 1 : -1)
+  // loop backwards through the history arrays (ring buffer)
+  txValue[0] = 3; // mark data as history package 
+  txValue[1] = (int16_t)n*2;  // total number of values (voltage and Ah)
+  txValue[2] = (int16_t)(histBin/1000*n); // total time of data in secs
+  txValue[3] = (int16_t)(histBin/1000); // time width per bin in secs
+  txValue[4] = (int16_t)((n*2)/5+1); // number of 20 byte packages 
+  pCharacteristic_tx->setValue((uint8_t*)txValue,20); // To send 10 uint16 values
+  pCharacteristic_tx->notify(); // Send the value to the app
+  int iv=0;
+  idx = histPos-1;  // start index
+  for (i=0; i<n; ++i) {
+    if(idx < 0) idx = nhistory -1;  // switch to the end of the array
+    if(idx == histPos) break;       // this should never happen!
+    txValue[iv++] = scale16(histAh[idx],10); // transmit with 1 digits precision
+    txValue[iv++] = scale16(histVolts[idx],100); // transmit with 2 digits precision
+    if(iv == 10) {
+      pCharacteristic_tx->setValue((uint8_t*)txValue,20); // To send 10 uint16 values
+      pCharacteristic_tx->notify(); // Send the values to the app!
+      memset(txValue, 0, sizeof(txValue));
+      iv=0;
+    }
+    --idx;
+  }
+  if(iv > 0) {
+    pCharacteristic_tx->setValue((uint8_t*)txValue,20); // To send 10 uint16 values  
+    pCharacteristic_tx->notify(); // Send the values to the app!
+  }
+}
 
 int16_t scale16(float val,float fac) {
 #define vmax16   32767.0
@@ -616,4 +674,12 @@ int16_t scale16(float val,float fac) {
   if ( val < vmin16) val = vmin16;
   if ( val > vmax16) val = vmax16;
   return (int16_t)val;
+}
+
+void clearStats() {
+  for (int i=0; i<nhistory;++i) {
+    histAmps[i] = -1000.0;
+    histAh[i] = -1000.0;
+    histVolts[i] = -1000.0;    
+  }
 }
