@@ -9,8 +9,8 @@ ADC: ADS1115 module via I2C
 - Voltage range 4V
 
 - Channel A3 - GND
-- Channel A2 - 12V battery voltage (divided by (10+31)/10=4.1) = approx 2.9V
-- Channel A1 - reference voltage of the sensor (nom. 2.5V) (buffered by OpAmp)
+- Channel A2 - 12V battery voltage (divided by (10+30)/10=4.0) = approx 3V
+- Channel A1 - reference voltage of the sensor (nom. 2.5V)
 - Channel A0 - Sensor reading typically 2.5V +- 0.625V 
 
 Precision: noise of sensor allows for about 50mA precision
@@ -53,12 +53,14 @@ CZ July 2020
 
 #include "mbedtls/md.h"
 
+/*
 extern "C" {
   #include "soc/syscon_struct.h"
 }
 #include "soc/sens_struct.h"
 #include <driver/adc.h>
 #include "esp_adc_cal.h"
+*/
 
 #include<ADS1115_WE.h> 
 #include<Wire.h>
@@ -78,12 +80,14 @@ BLECharacteristic *pCharacteristic_tx;
 
 bool deviceConnected = false;
 
-const adc1_channel_t adc12V        = ADC1_CHANNEL_6; // ADC1-6 : Battery Voltage
-const adc1_channel_t adcSensor     = ADC1_CHANNEL_7; // ADC1-7 : Sensor signal
-const adc1_channel_t adcSensorVref = ADC1_CHANNEL_4; // ADC1-4 : Sensor reference voltage
+ADS1115_WE adc = ADS1115_WE(I2C_ADDRESS);
 
-#define LED LED_BUILTIN
-#define BUTTON GPIO_NUM_0   // this is the boot button
+const ADS1115_MUX adc12V        = ADS1115_COMP_2_3; // Diff channel 2 and 3: Battery Voltage
+const ADS1115_MUX adcSensor     = ADS1115_COMP_0_1; // Diff channel 0 and 1 : Sensor signal
+// const ADS1115_MUX adcSensorVref = ADC1_CHANNEL_4; // ADC1-4 : Sensor reference voltage
+
+#define LED     LED_BUILTIN
+#define BUTTON  GPIO_NUM_0   // this is the boot button - NOT AVAILABLE in ESP32 mini modules
 
 hw_timer_t * msTimer = NULL;
 //hw_timer_t * timerADC = NULL;
@@ -91,40 +95,40 @@ hw_timer_t * msTimer = NULL;
 
 DRAM_ATTR unsigned long msTime;
 
-#define DefaultSignOnMsg  "This is the secret signon message of the battery monitor"   // pre-shared message for which a sha256 hash is send by the client
+#define DefaultSignOnMsg  "123456"   // pre-shared message for which a sha256 hash is send by the client
+#define maxSignonLen      10
 
-#define currentBin   0.05       // current only displayed in units of 50mA
+#define currentBin        0.05       // current only displayed in units of 50mA
 
-#define RSENSOR       0.26089   // measured value - voltage divider - 18k/(18k+51k)
-#define R12V          0.02907   // measured - ideal 1/34
+#define RSENSOR           1.        // scale factor for sensor voltage diff (sensor-reference)
+#define R12V              0.25      // measured - ideal 10/(10+30)=1/4
 
-#define chargeEff		0.95	// charging efficiency - AGM/GEL: ~95% , standard lead acid: ~80%
+#define chargeEff		      0.95	    // charging efficiency - AGM/GEL: ~95% , standard lead acid: ~80%
 
 // define time (ms) between the execution of certains functional codes
-#define doSave  30000 // ms to save data to EPPROM 
-#define doADC   100   // ms to read data from ADC 
-#define doLED   350   // ms to toggle the LED 
-#define doBLE  2000   // ms to send data over BLE
-#define waitSignon 2000 // ms to wait for the signon message
+#define doSave            30000 // ms to save data to EPPROM 
+#define doADC             100   // ms to read data from ADC
+#define doLED             350   // ms to toggle the LED 
+#define doBLE             2000   // ms to send data over BLE
+#define waitSignon        2000 // ms to wait for the signon message
 
 #define timeNoSignon 60000 // ms to wait for a connection without signon message (starts when button is pressed)
 
-DRAM_ATTR boolean isSave=false;
-DRAM_ATTR boolean isADC=false;
-DRAM_ATTR boolean isLED=false;
-DRAM_ATTR boolean isBLE=false;
-DRAM_ATTR boolean isAVR=false;
-DRAM_ATTR boolean isValidClient;
-DRAM_ATTR int     countSignon;
-DRAM_ATTR long    countNoSignon;
-DRAM_ATTR boolean isNoSignon;
-DRAM_ATTR int     ncharSignon;
-DRAM_ATTR boolean isReceiveSignon;
+DRAM_ATTR boolean   isSave=false;
+DRAM_ATTR boolean   isADC=false;
+DRAM_ATTR boolean   isLED=false;
+DRAM_ATTR boolean   isBLE=false;
+DRAM_ATTR boolean   isAVR=false;
+DRAM_ATTR boolean   isValidClient;
+DRAM_ATTR int       countSignon;
+DRAM_ATTR long      countNoSignon;
+DRAM_ATTR boolean   isNoSignon;
+DRAM_ATTR int       ncharSignon;
+DRAM_ATTR boolean   isReceiveSignon;
 
 
 double filtered12V = -1.0;
 double filteredSensor= -1.0;
-double filteredVref=-1.0;
 double BatCapNominal=0.0;
 double BatCap  = 0.0;   
 double BatIoff = 0.0;
@@ -157,13 +161,12 @@ char txt[100];
 char *signOnText;
 #define lenSignOn  100
 
-double VcalADC6(double adc) {return 0.0002290*adc+0.06544; } // calibrated voltage of ADC1_CHANNEL_6
-double get12V(double adc) { return (VcalADC6(adc))/R12V; }
-double VcalADC7_4(double adc)  { return 0.0002280*adc+0.06694; } // calibrated voltage of ADC1_CHANNEL_6 and ADC1_CHANNEL_4
-// double V2Amps(double dV)  { return 213.12*dV*dV+135.28*dV; } // calibrated voltage to current function - not suitable for extrapolation - includes already RSENSOR
-double V2Amps(double dV)  { return 144.806*dV; } // calibrated voltage to current function - includes already RSENSOR
+double Vcal12(double v)         { return v; } // calibrated voltage of ADC 
+double get12V(double v)         { return (Vcal12(v))/R12V; }
+double VcalSensor(double v)     { return v; } // calibrated voltage of Sensor measurement
+double V2Amps(double dV)        { return 20.0*dV; } // calibrated voltage to current function
 
-double getCurrent(double adcRef, double adcSens) { return V2Amps(VcalADC7_4(adcSens)-VcalADC7_4(adcRef)); }
+double getCurrent(double Vdiff) { return V2Amps(VcalSensor(Vdiff)); }
 
 #define sign(x) ((x>=0) ? 1 : -1)
 
@@ -171,20 +174,20 @@ double getCurrent(double adcRef, double adcSens) { return V2Amps(VcalADC7_4(adcS
 void persistentBatCapacity(boolean isGet=true) {
   double val;
   if(isGet) {
-    BatCapNominal = persistentStore.getDouble("CapNominal",100.0);
-    BatCap = persistentStore.getDouble("CapCurrent",10.0);
-    BatIoff = persistentStore.getDouble("Ioffset",0.0);
+    BatCapNominal = persistentStore.getDouble("CapNominal", 100.0);
+    BatCap = persistentStore.getDouble("CapCurrent", 10.0);
+    BatIoff = persistentStore.getDouble("Ioffset", 0.0);
   } else {
     // limit the precision to reduce FLASH write operations
     val=BatCapNominal;
     val = (long)(val/0.01+0.5)*0.01; // 2 decimal digits of precision
-    if (fabs(persistentStore.getDouble("CapNominal",100.0)-val)>0.005) persistentStore.putDouble("CapNominal",val);
+    if (fabs(persistentStore.getDouble("CapNominal", 100.0)-val) > 0.005) persistentStore.putDouble("CapNominal", val);
     val=BatCap;
     val = (long)(val/0.001+0.5)*0.001;  // 3 decimal digits of precision
-    if (fabs(persistentStore.getDouble("CapCurrent",10.0)-val)>0.0005) persistentStore.putDouble("CapCurrent",val);
+    if (fabs(persistentStore.getDouble("CapCurrent",10.0)-val) > 0.0005) persistentStore.putDouble("CapCurrent", val);
     val=BatIoff;
     val = (long)(val/0.001+0.5)*0.001;  // 3 decimal digits of precision
-    if (fabs(persistentStore.getDouble("Ioffset",0.0)-val)>0.0005) persistentStore.putDouble("Ioffset",val);
+    if (fabs(persistentStore.getDouble("Ioffset",0.0)-val) > 0.0005) persistentStore.putDouble("Ioffset", val);
   }
 }
 
@@ -265,7 +268,7 @@ class MyServerCallbacks: public BLEServerCallbacks {
       Serial.print("Client connects");
       deviceConnected = true;
       signOnText[0]='\0';
-      isValidClient = isNoSignon; // false;
+      isValidClient = isNoSignon;
     };
 
     void onDisconnect(BLEServer* pServer) {
@@ -320,22 +323,21 @@ class MyCallbacks: public BLECharacteristicCallbacks {
             } else if(rx.compare(0,2,"so") == 0) { // received set current offset command
                BatIoff=val/1000.;  // current offset given in mA
                persistentBatCapacity(false);
-            Serial.print(" BatIoff = ");
-            Serial.println(BatIoff);
+               Serial.print(" BatIoff = ");
+               Serial.println(BatIoff);
             } else if(rx.compare(0,2,"gh") == 0) { // received get history command
                sendHistory();
             } else if(rx.compare(0,2,"si") == 0 && isNoSignon) { // received set new signon message and correct mode (button pressed)
-               ncharSignon=atoi(rx.substr(2,2).c_str());  // 2 digits to set the length of the message
-               isReceiveSignon=ncharSignon>0 && ncharSignon<99;
+               ncharSignon = atoi(rx.substr(2,2).c_str());  // 2 digits to set the length of the message
+               isReceiveSignon = ncharSignon > 0 && ncharSignon <= maxSignonLen;
                signOnText[0] = '\0';
-               receiveSignon((char*)rx.substr(4).c_str(),(int)rx.length()-4);
+               receiveSignon((char*)rx.substr(4).c_str(), (int)rx.length()-4);
             }
           }
         }
       }
     }
 };
-
 
 void setup() {
 
@@ -347,8 +349,9 @@ void setup() {
 
   pinMode(BUTTON, INPUT);
   countNoSignon=ncharSignon;
-  isNoSignon=isReceiveSignon=false;
-
+  isNoSignon=isReceiveSignon=false;    
+  isNoSignon=true;
+    
   Serial.print("CPU Freq "); Serial.println(getCpuFrequencyMhz()); //Get CPU clock
 
 
@@ -359,28 +362,25 @@ void setup() {
   persistentBatCapacity();  // retrieve stored values of nominal and current battery capacity
   if(persistentStore.getString("signon").length() == 0) persistentStore.putString("signon",DefaultSignOnMsg);
     
-  // init ADC1
-  adc1_config_width(ADC_WIDTH_BIT_12);
-  adc1_config_channel_atten(adc12V,ADC_ATTEN_DB_0);
-  adc1_config_channel_atten(adcSensor,ADC_ATTEN_DB_0);
-  adc1_config_channel_atten(adcSensorVref,ADC_ATTEN_DB_0);
-  // get the reference voltage - NOT NEEDED
-//  esp_adc_cal_characteristics_t *adc_chars = (esp_adc_cal_characteristics_t*)calloc(1, sizeof(esp_adc_cal_characteristics_t));
-//  esp_adc_cal_value_t val_type = esp_adc_cal_characterize(ADC_UNIT_1, ADC_ATTEN_0db, ADC_WIDTH_BIT_12, 1100, adc_chars);
-//  calibADC= (float)(adc_chars->vref)/1000./4096;
-  
-//  sprintf(txt,"Vref %d \n",adc_chars->vref);
-//  Serial.println(txt);
+  // init ADC
+  Wire.begin();
+  if(!adc.init()){
+    Serial.println("Now ADC found - ADS1115 not connected!");
+  }
+  adc.setVoltageRange_mV(ADS1115_RANGE_4096);
+  adc.setCompareChannels(ADS1115_COMP_0_1);
+  adc.setConvRate(ADS1115_8_SPS);     // set samples per second
+  adc.setMeasureMode(ADS1115_SINGLE); // ADC running in single acquisition mode
 
-  filtered12V=filteredSensor=filteredVref=0.0;
+  filtered12V=filteredSensor=0.0;
   setupTimer();
   Serial.println("Timer setup done");
 
   Serial.print("History bins : ");
   Serial.println(nhistory);
-  histAmps = (float*)malloc(nhistory*sizeof(float));
-  histAh = (float*)malloc(nhistory*sizeof(float));
-  histVolts = (float*)malloc(nhistory*sizeof(float));
+  histAmps  = (float*) malloc(nhistory*sizeof(float));
+  histAh    = (float*) malloc(nhistory*sizeof(float));
+  histVolts = (float*) malloc(nhistory*sizeof(float));
 
   clearStats();
   
@@ -414,7 +414,7 @@ void setup() {
 
   // Start advertising
   pServer->getAdvertising()->start();
-  Serial.println("Waiting a client connection ...");
+  Serial.println("Waiting for a client connection ...");
 }
 
 // routine called once every 1ms 
@@ -446,13 +446,28 @@ void setupTimer() {
   timerAttachInterrupt(msTimer, &SetTime, true);  
   timerAlarmWrite(msTimer, 1000, true); // trigger once per milli second  
   timerAlarmEnable(msTimer);
-
+  
   interrupts();             // enable all interrupts
 }
 
+// retrieve a single value from the ADC - slow and low noise
+double getADC_V(ADS1115_MUX channel) {
+//  adc.setConvRate(ADS1115_8_SPS);
+//  adc.setMeasureMode(ADS1115_SINGLE);
+  adc.setCompareChannels(channel);
+  adc.startSingleMeasurement();
+  while ( adc.isBusy() );
+  return adc.getResult_V();
+}
+
+
+#define beta 0.3 // correspond to 1/n of the width of the sliding exp. window
+double getFilteredVoltage( double volti, double volts ) {
+  if (volts < -10.) return volti;
+  return volts - beta*(volts - volti); 
+}
 
 int nAvr=0;
-int nADC=0;
 double eff;
 void loop() {
 
@@ -471,21 +486,14 @@ void loop() {
     isLED = false;  
   }
 
-#define nsample 100 // number of samples to aquire per call
-#define betaADC 0.0025 // 0<beta<1
-#define betaAvr ((float)doADC/(float)doAVR * 3.0) // 0<beta<1 - correspond to 1/n of the width of the sliding exp. window
   if( isADC) {
-    for(int i=0;i<nsample; ++i) {
-      if(nADC < 1/betaADC) ++nADC;
-      filtered12V = filtered12V - min(1.0/nADC,betaADC)*(filtered12V - (double)adc1_get_raw(adc12V)); 
-      filteredSensor = filteredSensor - min(1.0/nADC,betaADC)*(filteredSensor - (double)adc1_get_raw(adcSensor)); 
-      filteredVref = filteredVref - min(1.0/nADC,betaADC)*(filteredVref - (double)adc1_get_raw(adcSensorVref)); 
-    }
+    filtered12V = getFilteredVoltage( getADC_V(adc12V), filtered12V ); 
+    filteredSensor = getFilteredVoltage( getADC_V(adcSensor), filteredSensor ); 
     VBat = get12V(filtered12V);
 //    sprintf(txt,"Volts %10.2f, adc %10.2f - ",VBat,filtered12V);       
 //    Serial.println(txt);
 
-    AmpsBat = getCurrent(filteredVref,filteredSensor);
+    AmpsBat = getCurrent(filteredSensor);
     AmpsBat = (long)(AmpsBat/currentBin)*currentBin - BatIoff;
     eff = sign(AmpsBat)<0 ? 1.0 : chargeEff;	// take efficiency of charging (I>0) into account 	
     BatCap += AmpsBat*doADC/1000/3600.0*eff; // calculate the change of the battery capacity
@@ -495,12 +503,7 @@ void loop() {
     avrVolts += VBat;
     avrAmps += AmpsBat;
     avrAh += BatCap;
-    
-//    if(nAvr < 1/betaAvr) ++nAvr;
-//    avrVolts = avrVolts - min(1.0/nAvr,betaAvr)*(avrVolts - VBat);       
-//    avrAmps = avrAmps - min(1.0/nAvr,betaAvr)*(avrAmps - AmpsBat);       
-//    avrAh = avrAh - min(1.0/nAvr,betaAvr)*(avrAh - BatCap);       
-    
+        
     isADC = false;  
   }
 
@@ -524,11 +527,11 @@ void loop() {
 
 //    pService->stop();
 
-    sprintf(txt,"%10.1f,%10.1f,%10.1f - ",filtered12V, filteredSensor, filteredVref);       
+    sprintf(txt,"%10.1f,%10.1f - ",filtered12V, filteredSensor);       
     Serial.print(txt);
     
     float PowerBat = VBat*AmpsBat; // power
-    sprintf(txt,"%10.4f,%10.4f,%10.4f",VcalADC6(filtered12V), VcalADC7_4(filteredSensor), VcalADC7_4(filteredVref));
+    sprintf(txt,"%10.4f,%10.4f",filtered12V, filteredSensor);
     Serial.println(txt);
     memset(txValue, 0, sizeof(txValue));
     txValue[0] = 0; // mark data as current values
@@ -545,7 +548,6 @@ void loop() {
     
 //    txValue[7] = scale16(filtered12V,1);
 //    txValue[8] = scale16(filteredSensor,1);
-//    txValue[9] = scale16(filteredVref,1);
 
     pCharacteristic_tx->setValue((uint8_t*)txValue,20); // To send 10 uint16 values
     pCharacteristic_tx->notify(); // Send the values to the app!
