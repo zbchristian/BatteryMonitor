@@ -161,7 +161,7 @@ char txt[100];
 char *signOnText;
 #define lenSignOn  100
 
-double Vcal12(double v)         { return v; } // calibrated voltage of ADC 
+double Vcal12(double v)         { return v-0.05; } // calibrated voltage of ADC 
 double get12V(double v)         { return (Vcal12(v))/R12V; }
 double VcalSensor(double v)     { return v; } // calibrated voltage of Sensor measurement
 double V2Amps(double dV)        { return 20.0*dV; } // calibrated voltage to current function
@@ -414,6 +414,8 @@ void setup() {
   // Start advertising
   pServer->getAdvertising()->start();
   Serial.println("Waiting for a client connection ...");
+  countNoSignon=timeNoSignon;
+  isNoSignon=true;
 }
 
 // routine called once every 1ms 
@@ -488,9 +490,10 @@ void loop() {
   if( isADC) {
     filtered12V = getFilteredVoltage( getADC_V(adc12V), filtered12V ); 
     filteredSensor = getFilteredVoltage( getADC_V(adcSensor), filteredSensor ); 
+//    filtered12V = getADC_V(adc12V); 
     VBat = get12V(filtered12V);
-//    sprintf(txt,"Volts %10.2f, adc %10.2f - ",VBat,filtered12V);       
-//    Serial.println(txt);
+    sprintf(txt,"VBat %10.2f, Vsens %10.1f - ",VBat,filteredSensor*1000);       
+    Serial.println(txt);
 
     AmpsBat = getCurrent(filteredSensor);
     AmpsBat = (long)(AmpsBat/currentBin)*currentBin - BatIoff;
