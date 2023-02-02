@@ -349,8 +349,7 @@ void setup() {
 
   pinMode(BUTTON, INPUT);
   countNoSignon=ncharSignon;
-  isNoSignon=isReceiveSignon=false;    
-  isNoSignon=true;
+  isNoSignon=isReceiveSignon=false; 
     
   Serial.print("CPU Freq "); Serial.println(getCpuFrequencyMhz()); //Get CPU clock
 
@@ -450,7 +449,7 @@ void setupTimer() {
   interrupts();             // enable all interrupts
 }
 
-// retrieve a single value from the ADC - slow and low noise
+// retrieve a single value from the ADC - slow with low noise
 double getADC_V(ADS1115_MUX channel) {
 //  adc.setConvRate(ADS1115_8_SPS);
 //  adc.setMeasureMode(ADS1115_SINGLE);
