@@ -161,10 +161,10 @@ char txt[100];
 char *signOnText;
 #define lenSignOn  100
 
-double Vcal12(double v)         { return v-0.05; } // calibrated voltage of ADC 
+double Vcal12(double v)         { return v-0.08; } // calibrated voltage of ADC 
 double get12V(double v)         { return (Vcal12(v))/R12V; }
 double VcalSensor(double v)     { return v; } // calibrated voltage of Sensor measurement
-double V2Amps(double dV)        { return 20.0*dV; } // calibrated voltage to current function
+double V2Amps(double dV)        { return 26.1*dV; } // calibrated voltage to current function
 
 double getCurrent(double Vdiff) { return V2Amps(VcalSensor(Vdiff)); }
 
@@ -368,7 +368,7 @@ void setup() {
   }
   adc.setVoltageRange_mV(ADS1115_RANGE_4096);
   adc.setCompareChannels(ADS1115_COMP_0_1);
-  adc.setConvRate(ADS1115_8_SPS);     // set samples per second
+  adc.setConvRate(ADS1115_16_SPS);     // set samples per second
   adc.setMeasureMode(ADS1115_SINGLE); // ADC running in single acquisition mode
 
   filtered12V=filteredSensor=0.0;
