@@ -11,7 +11,7 @@ Prototype exists, but the schematic not completed yet.
 
 ![Prototype](images/BatteryMonitorADS1115-Hall_300px.jpg?raw=true "Prototype of the Battery Monitor with split core current sensor")
 ![Prototype close up](images/BatteryMonitorADS1115-Shunt_300px.jpg?raw=true "Prototype of the Battery Monitor (close up)")
-![Prototype](images/BatteryMonitorADS1115-Hall_300px.jpg?raw=true "Prototype of the Battery Monitor with shunt resistor")
+![Prototype](images/BatteryMonitorADS1115_300px.jpg?raw=true "Prototype of the Battery Monitor with shunt resistor")
 
 
 
