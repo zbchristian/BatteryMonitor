@@ -6,14 +6,14 @@ Sensor model YHDC HSTS016L +-20A
 
 ADC: ADS1115 module via I2C
 - Powered by 5V
-- Voltage range 4V
+- Voltage range 4V (Hall sensor) or 256mV (shunt resistor)
 
 - Channel A3 - GND
 - Channel A2 - 12V battery voltage (divided by (10+30)/10=4.0) = approx 3V
-- Channel A1 - reference voltage of the sensor (nom. 2.5V)
-- Channel A0 - Sensor reading typically 2.5V +- 0.625V 
+- Channel A1 - reference voltage of the sensor (nom. 2.5V) 
+- Channel A0 - Sensor reading typically 2.5V +- 0.625V or +-75mV (shunt)
 
-Precision: noise of sensor allows for about 50mA precision
+Precision: noise of hall sensor allows for about 50mA precision
 
 Values are transmitted via Low Energy Bluetooth to a smartphone app
 - all values in uint16 format
@@ -39,6 +39,10 @@ ghxxxx - get history data (xxxx = time window in secs, if 0 : send all data)
 CZ July 2020
 
 */
+
+// set the sensor type
+//#define CURRENT_SHUNT
+#define CURRENT_HALL
 
 #include <stdlib.h>
 
@@ -69,6 +73,14 @@ extern "C" {
 #include <Preferences.h>
 Preferences persistentStore;  // provides access to the Flash memory
 
+
+#ifndef CURRENT_HALL
+#define CURRENT_CURRENT
+#endif
+#ifndef CURRENT_SHUNT
+#define CURRENT_HALL
+#endif
+
 int16_t scale16(float ,float );
 void clearStats(void);
 void calcStats();
@@ -84,7 +96,13 @@ ADS1115_WE adc = ADS1115_WE(I2C_ADDRESS);
 
 const ADS1115_MUX adc12V        = ADS1115_COMP_2_3; // Diff channel 2 and 3: Battery Voltage
 const ADS1115_MUX adcSensor     = ADS1115_COMP_0_1; // Diff channel 0 and 1 : Sensor signal
-// const ADS1115_MUX adcSensorVref = ADC1_CHANNEL_4; // ADC1-4 : Sensor reference voltage
+
+const ADS1115_RANGE RangeV12    = ADS1115_RANGE_4096;
+#ifdef CURRENT_HALL
+const ADS1115_RANGE RangeSensor = ADS1115_RANGE_4096;
+#else
+const ADS1115_RANGE RangeSensor = ADS1115_RANGE_0256;
+#endif
 
 #define LED     LED_BUILTIN
 #define BUTTON  GPIO_NUM_0   // this is the boot button - NOT AVAILABLE in ESP32 mini modules
@@ -94,6 +112,8 @@ hw_timer_t * msTimer = NULL;
 //hw_timer_t * timerLED = NULL;
 
 DRAM_ATTR unsigned long msTime;
+unsigned long deltaTime=0;
+unsigned long msLast=0;
 
 #define DefaultSignOnMsg  "123456"   // pre-shared message for which a sha256 hash is send by the client
 #define maxSignonLen      10
@@ -107,7 +127,7 @@ DRAM_ATTR unsigned long msTime;
 
 // define time (ms) between the execution of certains functional codes
 #define doSave            30000 // ms to save data to EPPROM 
-#define doADC             100   // ms to read data from ADC
+#define doADC             300   // ms to read data from ADC
 #define doLED             350   // ms to toggle the LED 
 #define doBLE             2000   // ms to send data over BLE
 #define waitSignon        2000 // ms to wait for the signon message
@@ -163,9 +183,13 @@ char *signOnText;
 
 double Vcal12(double v)         { return v-0.08; } // calibrated voltage of ADC 
 double get12V(double v)         { return (Vcal12(v))/R12V; }
-double VcalSensor(double v)     { return v; } // calibrated voltage of Sensor measurement
-double V2Amps(double dV)        { return 26.1*dV; } // calibrated voltage to current function
-
+#ifdef CURRENT_HALL
+double VcalSensor(double v)     { return v; } // Hall - calibrated voltage of Sensor measurement
+double V2Amps(double dV)        { return 26.1*dV; } // Hall sensor - calibrated voltage to current function
+#else
+double VcalSensor(double v)     { return v+0.00014; } // Shunt - calibrated voltage of Sensor measurement
+double V2Amps(double dV)        { return 100/0.085*dV; } // Shunt - calibrated voltage to current function
+#endif
 double getCurrent(double Vdiff) { return V2Amps(VcalSensor(Vdiff)); }
 
 #define sign(x) ((x>=0) ? 1 : -1)
@@ -366,7 +390,7 @@ void setup() {
   if(!adc.init()){
     Serial.println("Now ADC found - ADS1115 not connected!");
   }
-  adc.setVoltageRange_mV(ADS1115_RANGE_4096);
+  adc.setVoltageRange_mV(RangeSensor);
   adc.setCompareChannels(ADS1115_COMP_0_1);
   adc.setConvRate(ADS1115_16_SPS);     // set samples per second
   adc.setMeasureMode(ADS1115_SINGLE); // ADC running in single acquisition mode
@@ -452,9 +476,8 @@ void setupTimer() {
 }
 
 // retrieve a single value from the ADC - slow with low noise
-double getADC_V(ADS1115_MUX channel) {
-//  adc.setConvRate(ADS1115_8_SPS);
-//  adc.setMeasureMode(ADS1115_SINGLE);
+double getADC_V(ADS1115_MUX channel, ADS1115_RANGE range) {
+  adc.setVoltageRange_mV(range);
   adc.setCompareChannels(channel);
   adc.startSingleMeasurement();
   while ( adc.isBusy() );
@@ -488,17 +511,20 @@ void loop() {
   }
 
   if( isADC) {
-    filtered12V = getFilteredVoltage( getADC_V(adc12V), filtered12V ); 
-    filteredSensor = getFilteredVoltage( getADC_V(adcSensor), filteredSensor ); 
+    deltaTime = msTime - msLast;
+    msLast = msTime;
+    filtered12V = getFilteredVoltage( getADC_V(adc12V, RangeV12), filtered12V ); 
+    filteredSensor = getFilteredVoltage( getADC_V(adcSensor, RangeSensor), filteredSensor ); 
 //    filtered12V = getADC_V(adc12V); 
     VBat = get12V(filtered12V);
-    sprintf(txt,"VBat %10.2f, Vsens %10.1f - ",VBat,filteredSensor*1000);       
+    AmpsBat = getCurrent(filteredSensor);
+    sprintf(txt,"deltaTime %d, VBat %10.2f, Vsens %10.3f, Current %10.3f - ",deltaTime,VBat,filteredSensor*1000, AmpsBat);       
     Serial.println(txt);
 
     AmpsBat = getCurrent(filteredSensor);
     AmpsBat = (long)(AmpsBat/currentBin)*currentBin - BatIoff;
-    eff = sign(AmpsBat)<0 ? 1.0 : chargeEff;	// take efficiency of charging (I>0) into account 	
-    BatCap += AmpsBat*doADC/1000/3600.0*eff; // calculate the change of the battery capacity
+    eff = sign(AmpsBat)<0 ? 1.0 : chargeEff;	// take efficiency of charging (I>0) into account
+    BatCap += AmpsBat*deltaTime/1000/3600.0*eff; // calculate the change of the battery capacity
     if ( BatCap <= 0.0) BatCap = 0.0;
 
     ++nAvr;
