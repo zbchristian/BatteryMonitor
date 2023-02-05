@@ -46,9 +46,7 @@ The reached resolution is for both cases about 50mA.
 
 Analog to digital conversion
 ============================
-Internal 12-bit ADC of the ESP32 processor. The ADC is quite noisy and an averaging (low pass filter) is used in the software 
-in order to achieve the resolution of about 50mA.
-The ADS1115 16 bit ADC is readily available as a module. It exhibits 4 channels, a wide adjustable voltage range, a build in amplifier and can directly measure voltage differences.  
+The ADC ADS1115 with 16 bit resolution is readily available as a module. It exhibits 4 channels, a wide adjustable voltage range, a build in amplifier and can directly measure voltage differences.  
 
 Android APP
 ===========
