@@ -7,10 +7,12 @@ Measure and display the
 
 of a camper/mobil home 12V battery on an Android Smartphone.
 
-Prototype exists, but the schematic not completed yet.
+Schematic and borad design in the Eagle folder.
 
-![Prototype](images/prototype_w_sensor_300px.jpg?raw=true "Prototype of the Battery Monitor")
-![Prototype close up](images/prototype_labeled_300px.jpg?raw=true "Prototype of the Battery Monitor (close up)")
+![Prototype](images/BatteryMonitorADS1115_500px.jpg?raw=true "Prototype of the Battery Monitor")
+![Prototype with Hall sensor](images/BatteryMonitorADS1115-Hall_500px.jpg?raw=true "Prototype of the Battery Monitor with split core current sensor")
+![Prototype with shunt](images/BatteryMonitorADS1115-Shunt_500px.jpg?raw=true "Prototype of the Battery Monitor with shunt")
+
 
 
 Hardware
