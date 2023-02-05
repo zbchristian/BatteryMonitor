@@ -18,7 +18,7 @@ Schematic and borad design in the Eagle folder.
 Hardware
 ========
 * ESP32 board
-* Current sensor to measure the magnetic field 
+* Current sensor (Hall sensor to measure the magnetic field, or shunt resistor) 
 * Step-down regulator (DC-DC Buck converter)
   * Input: 10V-20V
   * Output: 5V (fixed or adjustable)
