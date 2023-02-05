@@ -9,8 +9,10 @@ of a camper/mobil home 12V battery on an Android Smartphone.
 
 Prototype exists, but the schematic not completed yet.
 
-![Prototype](images/prototype_w_sensor_300px.jpg?raw=true "Prototype of the Battery Monitor")
-![Prototype close up](images/prototype_labeled_300px.jpg?raw=true "Prototype of the Battery Monitor (close up)")
+![Prototype](images/BatteryMonitorADS1115-Hall_300px.jpg?raw=true "Prototype of the Battery Monitor with split core current sensor")
+![Prototype close up](images/BatteryMonitorADS1115-Shunt_300px.jpg?raw=true "Prototype of the Battery Monitor (close up)")
+![Prototype](images/BatteryMonitorADS1115-Hall_300px.jpg?raw=true "Prototype of the Battery Monitor with shunt resistor")
+
 
 
 Hardware
