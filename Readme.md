@@ -66,6 +66,13 @@ Software
 ========
 The Arduino IDE is used for the code development.
 
+Requires packages
+-----------------
+- ESP32 support with BLE and Wire
+- ADS1115_WE by Wolfgang Ewald
+
+Concept
+-------
 - The BLE connection is initialized by the phone
 - A sign-on message is expected by the ESP32. This is a hash value of the current time (salt) and a pre-shared pass phrase. 
 - If the message is not received, the BLE connection is terminated.
