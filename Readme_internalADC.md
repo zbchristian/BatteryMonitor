@@ -7,48 +7,38 @@ Measure and display the
 
 of a camper/mobil home 12V battery on an Android Smartphone.
 
-Schematic and borad design in the Eagle folder.
+Prototype exists, but the schematic not completed yet.
 
-![Prototype](images/BatteryMonitorADS1115_500px.jpg?raw=true "Prototype of the Battery Monitor")
-![Prototype with Hall sensor](images/BatteryMonitorADS1115-Hall_500px.jpg?raw=true "Prototype of the Battery Monitor with split core current sensor")
-![Prototype with shunt](images/BatteryMonitorADS1115-Shunt_500px.jpg?raw=true "Prototype of the Battery Monitor with shunt")
-
+![Prototype](images/prototype_w_sensor_300px.jpg?raw=true "Prototype of the Battery Monitor")
+![Prototype close up](images/prototype_labeled_300px.jpg?raw=true "Prototype of the Battery Monitor (close up)")
 
 
 Hardware
 ========
 * ESP32 board
-* Current sensor (Hall sensor to measure the magnetic field, or shunt resistor) 
+* Current sensor to measure the magnetic field 
 * Step-down regulator (DC-DC Buck converter)
   * Input: 10V-20V
   * Output: 5V (fixed or adjustable)
   * Current: 1A
-* ADS1115 16 bit ADC
+* Dual OpAmp
 
 Current Sensor
 ==============
-A split core current sensor with a Hall sensor or a shunt resistor is used to measure the current.
+A split core current sensor with a Hall sensor is used to measure the current.
 
-Hall Sensor
------------
 Advantage: sensor works contactless. No need to mess with the cabling, since the sensor is just placed around one of the battery cables.
 
 Utilized model: YHDC HSTS016L +-20A
-- 2.5+-0.625V 
-- reference voltage 2.5V
+- 2.5+-0.625V (buffered by an OpAmp) 
+- reference voltage 2.5V (buffered by an OpAmp) 
 
-Shunt Resistor
---------------
-A commercial shunt suitable for a high current (e.g. 100A) is placed into the ground connection to the battery. The voltage drop is small (e.g. 70mV for 100A).
-The ADS1115 allows to change the voltage range down to +-256mV. This makes it suitable to measure the current with sufficient precision.
-
-The reached resolution is for both cases about 50mA.
+The reached resolution is about 50mA.
 
 Analog to digital conversion
 ============================
 Internal 12-bit ADC of the ESP32 processor. The ADC is quite noisy and an averaging (low pass filter) is used in the software 
 in order to achieve the resolution of about 50mA.
-The ADS1115 16 bit ADC is readily available as a module. It exhibits 4 channels, a wide adjustable voltage range, a build in amplifier and can directly measure voltage differences.  
 
 Android APP
 ===========
@@ -66,13 +56,6 @@ Software
 ========
 The Arduino IDE is used for the code development.
 
-Requires packages
------------------
-- ESP32 support with BLE and Wire
-- ADS1115_WE by Wolfgang Ewald
-
-Concept
--------
 - The BLE connection is initialized by the phone
 - A sign-on message is expected by the ESP32. This is a hash value of the current time (salt) and a pre-shared pass phrase. 
 - If the message is not received, the BLE connection is terminated.
