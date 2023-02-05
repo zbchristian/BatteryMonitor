@@ -2,7 +2,7 @@
 /*
 BATTERY MONITOR WITH CURRENT SPLIT CORE WITH HALL SENSOR
 ========================================================
-Sensor model YHDC HSTS016L +-20A
+Sensor model YHDC HSTS016L or a shunt resistor
 
 ADC: ADS1115 module via I2C
 - Powered by 5V

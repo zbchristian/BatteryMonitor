@@ -21,24 +21,32 @@ Hardware
   * Input: 10V-20V
   * Output: 5V (fixed or adjustable)
   * Current: 1A
-* Dual OpAmp
+* ADS1115 16 bit ADC
 
 Current Sensor
 ==============
-A split core current sensor with a Hall sensor is used to measure the current.
+A split core current sensor with a Hall sensor or a shunt resistor is used to measure the current.
 
+Hall Sensor
+-----------
 Advantage: sensor works contactless. No need to mess with the cabling, since the sensor is just placed around one of the battery cables.
 
 Utilized model: YHDC HSTS016L +-20A
 - 2.5+-0.625V (buffered by an OpAmp) 
 - reference voltage 2.5V (buffered by an OpAmp) 
 
-The reached resolution is about 50mA.
+Shunt Resistor
+--------------
+A commercial shunt suitable for a high current (e.g. 100A) is placed into the ground connection to the battery. The voltage drop is small (e.g. 70mV for 100A).
+The ADS1115 allows to change the voltage range down to +-256mV. This makes it suitable to measure the current with sufficient precision.
+
+The reached resolution is for both cases about 50mA.
 
 Analog to digital conversion
 ============================
 Internal 12-bit ADC of the ESP32 processor. The ADC is quite noisy and an averaging (low pass filter) is used in the software 
 in order to achieve the resolution of about 50mA.
+The ADS1115 16 bit ADC is readily available as a module. It exhibits 4 channels, a wide adjustable voltage range, a build in amplifier and can directly measure voltage differences.  
 
 Android APP
 ===========
@@ -61,10 +69,3 @@ The Arduino IDE is used for the code development.
 - If the message is not received, the BLE connection is terminated.
 - Data are send to the APP every second as a block of 20 bytes. The values are 16 bit integer values, which have been scaled to reflect the predefined number og significant digits. 
 
-To Come
-=======
-Use ADS1115 16bit ADC board instead of internal ADC.
-
-Advantage:
-- less noise
-- internal amplifier
