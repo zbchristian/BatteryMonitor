@@ -25,6 +25,8 @@ Hardware
   * Current: 1A
 * ADS1115 16 bit ADC
 
+For a version utilizing the internal ADC, see the [Readme](Readme_internalADC.md)
+
 Current Sensor
 ==============
 A split core current sensor with a Hall sensor or a shunt resistor is used to measure the current.
@@ -40,7 +42,7 @@ Utilized model: YHDC HSTS016L +-20A
 Shunt Resistor
 --------------
 A commercial shunt suitable for a high current (e.g. 100A) is placed into the ground connection to the battery. The voltage drop is small (e.g. 70mV for 100A).
-The ADS1115 allows to change the voltage range down to +-256mV. This makes it suitable to measure the current with sufficient precision.
+The ADS1115 allows to change the voltage range down to +-256mV. This makes it suitable to measure the current with sufficient precision, without the need of an additional amplifier.
 
 The reached resolution is for both cases about 50mA.
 

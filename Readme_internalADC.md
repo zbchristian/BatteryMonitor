@@ -16,7 +16,7 @@ Prototype exists, but the schematic not completed yet.
 Hardware
 ========
 * ESP32 board
-* Current sensor to measure the magnetic field 
+* Current sensor to measure the magnetic field or a shunt resistor 
 * Step-down regulator (DC-DC Buck converter)
   * Input: 10V-20V
   * Output: 5V (fixed or adjustable)
