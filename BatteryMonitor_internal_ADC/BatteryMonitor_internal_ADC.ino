@@ -682,4 +682,8 @@ void clearStats() {
     histAh[i] = -1000.0;
     histVolts[i] = -1000.0;    
   }
+<<<<<<< HEAD
 }
+=======
+}
+>>>>>>> master
