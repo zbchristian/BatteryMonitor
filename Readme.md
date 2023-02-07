@@ -17,12 +17,12 @@ The monitor is based on three modules (DC-DC converter, ESP32, ADS1115), which a
 
 Hardware
 ========
-* ESP32 board
+* ESP32 board (Mini)
 * Current sensor (Hall sensor to measure the magnetic field, or shunt resistor) 
 * Step-down regulator (DC-DC Buck converter)
   * Input: 10V-20V
   * Output: 5V (fixed or adjustable)
-  * Current: 1A
+  * Max. current: 1A
 * ADS1115 16 bit ADC
 
 For a version utilizing the internal ADC, see the [Readme](Readme_internalADC.md)
@@ -64,7 +64,7 @@ Developed with the MIT App-Inventor2
 
 Software
 ========
-The Arduino IDE is used for the code development.
+The Arduino IDE is used for the code development. The [code](./BatteryMonitor_ADS1115/BatteryMonitor_ADS1115.ino) consists of a single file.
 
 Requires packages
 -----------------
@@ -73,8 +73,12 @@ Requires packages
 
 Concept
 -------
+- Settings: define time intervals and used channels in the `#define` section of the code
+- Setup: reduce CPU clock to save power, setup timers and the external ADC
+- Loop: interrupt every 1ms to determine the required action. Read the battery voltage and current, calculate the Ah and power and store current battery state to flash
 - The BLE connection is initialized by the phone
 - A sign-on message is expected by the ESP32. This is a hash value of the current time (salt) and a pre-shared pass phrase. 
 - If the message is not received, the BLE connection is terminated.
+- For the first 60 seconds the connection is possible without the passphrase
 - Data are send to the APP every second as a block of 20 bytes. The values are 16 bit integer values, which have been scaled to reflect the predefined number og significant digits. 
 
