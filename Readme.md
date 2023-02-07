@@ -7,38 +7,48 @@ Measure and display the
 
 of a camper/mobil home 12V battery on an Android Smartphone.
 
-Prototype exists, but the schematic not completed yet.
+The monitor is based on three modules (DC-DC converter, ESP32, ADS1115), which are placed either on a bread board or a PCB. The schematic and the layout of this base board can be found in the Eagle folder.
 
-![Prototype](images/prototype_w_sensor_300px.jpg?raw=true "Prototype of the Battery Monitor")
-![Prototype close up](images/prototype_labeled_300px.jpg?raw=true "Prototype of the Battery Monitor (close up)")
+![Prototype](images/BatteryMonitorADS1115_500px.jpg?raw=true "Prototype of the Battery Monitor")
+![Prototype with Hall sensor](images/BatteryMonitorADS1115-Hall_500px.jpg?raw=true "Prototype of the Battery Monitor with split core current sensor")
+![Prototype with shunt](images/BatteryMonitorADS1115-Shunt_500px.jpg?raw=true "Prototype of the Battery Monitor with shunt")
+
 
 
 Hardware
 ========
-* ESP32 board
-* Current sensor to measure the magnetic field 
+* ESP32 board (Mini)
+* Current sensor (Hall sensor to measure the magnetic field, or shunt resistor) 
 * Step-down regulator (DC-DC Buck converter)
   * Input: 10V-20V
   * Output: 5V (fixed or adjustable)
-  * Current: 1A
-* Dual OpAmp
+  * Max. current: 1A
+* ADS1115 16 bit ADC
+
+For a version utilizing the internal ADC, see the [Readme](Readme_internalADC.md)
 
 Current Sensor
 ==============
-A split core current sensor with a Hall sensor is used to measure the current.
+A split core current sensor with a Hall sensor or a shunt resistor is used to measure the current.
 
+Hall Sensor
+-----------
 Advantage: sensor works contactless. No need to mess with the cabling, since the sensor is just placed around one of the battery cables.
 
 Utilized model: YHDC HSTS016L +-20A
-- 2.5+-0.625V (buffered by an OpAmp) 
-- reference voltage 2.5V (buffered by an OpAmp) 
+- 2.5+-0.625V 
+- reference voltage 2.5V
 
-The reached resolution is about 50mA.
+Shunt Resistor
+--------------
+A commercial shunt suitable for a high current (e.g. 100A) is placed into the ground connection to the battery. The voltage drop is small (e.g. 70mV for 100A).
+The ADS1115 allows to change the voltage range down to +-256mV. This makes it suitable to measure the current with sufficient precision, without the need of an additional amplifier.
+
+The reached resolution is for both cases about 50mA.
 
 Analog to digital conversion
 ============================
-Internal 12-bit ADC of the ESP32 processor. The ADC is quite noisy and an averaging (low pass filter) is used in the software 
-in order to achieve the resolution of about 50mA.
+The ADC ADS1115 with 16 bit resolution is readily available as a module. It exhibits 4 channels, a wide adjustable voltage range, a build in amplifier and can directly measure voltage differences.  
 
 Android APP
 ===========
@@ -54,17 +64,21 @@ Developed with the MIT App-Inventor2
 
 Software
 ========
-The Arduino IDE is used for the code development.
+The Arduino IDE is used for the code development. The [code](./BatteryMonitor_ADS1115/BatteryMonitor_ADS1115.ino) consists of a single file.
 
+Requires packages
+-----------------
+- ESP32 support with BLE and Wire
+- ADS1115_WE by Wolfgang Ewald
+
+Concept
+-------
+- Settings: define time intervals and used channels in the `#define` section of the code
+- Setup: reduce CPU clock to save power, setup timers and the external ADC
+- Loop: interrupt every 1ms to determine the required action. Read the battery voltage and current, calculate the Ah and power and store current battery state to flash
 - The BLE connection is initialized by the phone
 - A sign-on message is expected by the ESP32. This is a hash value of the current time (salt) and a pre-shared pass phrase. 
 - If the message is not received, the BLE connection is terminated.
+- For the first 60 seconds the connection is possible without the passphrase
 - Data are send to the APP every second as a block of 20 bytes. The values are 16 bit integer values, which have been scaled to reflect the predefined number og significant digits. 
 
-To Come
-=======
-Use ADS1115 16bit ADC board instead of internal ADC.
-
-Advantage:
-- less noise
-- internal amplifier
