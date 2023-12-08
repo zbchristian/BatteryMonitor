@@ -64,46 +64,46 @@
 <library name="MH-ET_ESP32_D1_MINI">
 <packages>
 <package name="MH-ET_ESP32_D1_MINI">
-<pad name="CLK" x="0" y="0" drill="0.9" diameter="1.9304" shape="square"/>
+<pad name="CLK" x="0" y="0" drill="0.9"/>
 <pad name="SD1" x="0" y="-2.54" drill="0.9"/>
 <pad name="IO2" x="0" y="-5.08" drill="0.9"/>
 <pad name="IO0" x="0" y="-7.62" drill="0.9"/>
 <pad name="IO4" x="0" y="-10.16" drill="0.9"/>
-<pad name="TDI" x="0" y="-12.7" drill="0.9" diameter="1.9304" shape="octagon"/>
+<pad name="TDI" x="0" y="-12.7" drill="0.9"/>
 <pad name="IO32" x="0" y="-15.24" drill="0.9"/>
 <pad name="IO25" x="0" y="-17.78" drill="0.9"/>
 <pad name="IO27" x="0" y="-20.32" drill="0.9"/>
-<pad name="GND" x="0" y="-22.86" drill="0.9" diameter="1.9304" shape="square"/>
-<pad name="TXD" x="2.54" y="-22.86" drill="0.9" diameter="1.9304" shape="square"/>
+<pad name="GND" x="0" y="-22.86" drill="0.9"/>
+<pad name="TXD" x="2.54" y="-22.86" drill="0.9"/>
 <pad name="RXD" x="2.54" y="-20.32" drill="0.9"/>
-<pad name="IO22" x="2.54" y="-17.78" drill="0.9" diameter="2.032" shape="octagon" rot="R180"/>
-<pad name="IO21" x="2.54" y="-15.24" drill="0.9" diameter="1.9304" shape="octagon" rot="R180"/>
+<pad name="IO22" x="2.54" y="-17.78" drill="0.9" rot="R180"/>
+<pad name="IO21" x="2.54" y="-15.24" drill="0.9" rot="R180"/>
 <pad name="IO17" x="2.54" y="-12.7" drill="0.9"/>
 <pad name="IO16" x="2.54" y="-10.16" drill="0.9"/>
-<pad name="GND2" x="2.54" y="-7.62" drill="0.9" diameter="1.9304" shape="square"/>
-<pad name="VCC" x="2.54" y="-5.08" drill="0.9" diameter="1.9304" shape="square"/>
+<pad name="GND2" x="2.54" y="-7.62" drill="0.9"/>
+<pad name="VCC" x="2.54" y="-5.08" drill="0.9"/>
 <pad name="TD0" x="2.54" y="-2.54" drill="0.9"/>
-<pad name="SD0" x="2.54" y="0" drill="0.9" diameter="1.9304" shape="square"/>
-<pad name="SD3" x="25.4" y="0" drill="0.9" diameter="1.9304" shape="square"/>
-<pad name="TCK" x="25.4" y="-2.54" drill="0.9" diameter="1.9304" shape="octagon"/>
+<pad name="SD0" x="2.54" y="0" drill="0.9"/>
+<pad name="SD3" x="25.4" y="0" drill="0.9"/>
+<pad name="TCK" x="25.4" y="-2.54" drill="0.9"/>
 <pad name="3V3" x="25.4" y="-5.08" drill="0.9"/>
 <pad name="IO5" x="25.4" y="-7.62" drill="0.9"/>
-<pad name="IO23" x="25.4" y="-10.16" drill="0.9" diameter="1.9304" shape="octagon"/>
+<pad name="IO23" x="25.4" y="-10.16" drill="0.9"/>
 <pad name="IO19" x="25.4" y="-12.7" drill="0.9"/>
 <pad name="IO18" x="25.4" y="-15.24" drill="0.9"/>
 <pad name="IO26" x="25.4" y="-17.78" drill="0.9"/>
 <pad name="SVP" x="25.4" y="-20.32" drill="0.9"/>
-<pad name="RST" x="25.4" y="-22.86" drill="0.9" diameter="1.9304" shape="square"/>
-<pad name="GND3" x="27.94" y="-22.86" drill="0.9" diameter="1.9304" shape="square"/>
+<pad name="RST" x="25.4" y="-22.86" drill="0.9"/>
+<pad name="GND3" x="27.94" y="-22.86" drill="0.9"/>
 <pad name="NC" x="27.94" y="-20.32" drill="0.9"/>
 <pad name="SVN" x="27.94" y="-17.78" drill="0.9"/>
 <pad name="IO35" x="27.94" y="-15.24" drill="0.9"/>
-<pad name="IO33" x="27.94" y="-12.7" drill="0.9" diameter="1.9304" shape="octagon"/>
+<pad name="IO33" x="27.94" y="-12.7" drill="0.9"/>
 <pad name="IO34" x="27.94" y="-10.16" drill="0.9"/>
 <pad name="TMS" x="27.94" y="-7.62" drill="0.9"/>
 <pad name="NC2" x="27.94" y="-5.08" drill="0.9"/>
 <pad name="SD2" x="27.94" y="-2.54" drill="0.9"/>
-<pad name="CMD" x="27.94" y="0" drill="0.9" diameter="1.9304" shape="square"/>
+<pad name="CMD" x="27.94" y="0" drill="0.9"/>
 <wire x1="-1.75" y1="8.55" x2="-1.75" y2="-30.45" width="0.127" layer="21"/>
 <wire x1="-1.75" y1="-30.45" x2="5" y2="-30.45" width="0.127" layer="21"/>
 <wire x1="23" y1="-30.45" x2="29.25" y2="-30.45" width="0.127" layer="21"/>
@@ -8085,8 +8085,8 @@ Source: http://ww1.microchip.com/downloads/en/DeviceDoc/22049b.pdf</description>
 </class>
 </classes>
 <parts>
-<part name="U$1" library="MH-ET_ESP32_D1_MINI" deviceset="MH-ET_ESP32_D1_MINI" device=""/>
-<part name="HSTS016L" library="pinhead" deviceset="PINHD-1X4" device="/90" value="1"/>
+<part name="ESP32" library="MH-ET_ESP32_D1_MINI" deviceset="MH-ET_ESP32_D1_MINI" device=""/>
+<part name="I-SENS" library="pinhead" deviceset="PINHD-1X4" device="/90" value="1"/>
 <part name="PWR" library="con-wago-500" deviceset="W237-102" device="" value="12V">
 <attribute name="GND" value=""/>
 <attribute name="VIN" value="12V"/>
@@ -8111,11 +8111,11 @@ Source: http://ww1.microchip.com/downloads/en/DeviceDoc/22049b.pdf</description>
 <plain>
 </plain>
 <instances>
-<instance part="U$1" gate="G$1" x="101.6" y="66.04" smashed="yes">
+<instance part="ESP32" gate="G$1" x="101.6" y="66.04" smashed="yes">
 <attribute name="NAME" x="99.06" y="88.9" size="1.27" layer="95"/>
 <attribute name="VALUE" x="99.06" y="86.36" size="1.27" layer="96"/>
 </instance>
-<instance part="HSTS016L" gate="A" x="152.4" y="2.54" smashed="yes">
+<instance part="I-SENS" gate="A" x="152.4" y="2.54" smashed="yes">
 <attribute name="NAME" x="146.05" y="10.795" size="1.778" layer="95"/>
 <attribute name="VALUE" x="146.05" y="-5.08" size="1.778" layer="96"/>
 </instance>
@@ -8200,7 +8200,7 @@ Source: http://ww1.microchip.com/downloads/en/DeviceDoc/22049b.pdf</description>
 </net>
 <net name="GND" class="0">
 <segment>
-<pinref part="U$1" gate="G$1" pin="GND@1"/>
+<pinref part="ESP32" gate="G$1" pin="GND@1"/>
 <wire x1="86.36" y1="81.28" x2="66.04" y2="81.28" width="0.1524" layer="91"/>
 <wire x1="66.04" y1="81.28" x2="66.04" y2="50.8" width="0.1524" layer="91"/>
 <pinref part="U$3" gate="G$1" pin="OUT-@1"/>
@@ -8209,13 +8209,13 @@ Source: http://ww1.microchip.com/downloads/en/DeviceDoc/22049b.pdf</description>
 <wire x1="63.5" y1="48.26" x2="66.04" y2="48.26" width="0.1524" layer="91"/>
 <wire x1="66.04" y1="48.26" x2="66.04" y2="50.8" width="0.1524" layer="91"/>
 <junction x="66.04" y="50.8"/>
-<pinref part="U$1" gate="G$1" pin="GND@2"/>
+<pinref part="ESP32" gate="G$1" pin="GND@2"/>
 <wire x1="116.84" y1="66.04" x2="127" y2="66.04" width="0.1524" layer="91"/>
 <wire x1="127" y1="66.04" x2="127" y2="96.52" width="0.1524" layer="91"/>
 <wire x1="127" y1="96.52" x2="66.04" y2="96.52" width="0.1524" layer="91"/>
 <wire x1="66.04" y1="96.52" x2="66.04" y2="81.28" width="0.1524" layer="91"/>
 <junction x="66.04" y="81.28"/>
-<pinref part="U$1" gate="G$1" pin="GND@3"/>
+<pinref part="ESP32" gate="G$1" pin="GND@3"/>
 <wire x1="116.84" y1="55.88" x2="127" y2="55.88" width="0.1524" layer="91"/>
 <wire x1="127" y1="55.88" x2="127" y2="66.04" width="0.1524" layer="91"/>
 <junction x="127" y="66.04"/>
@@ -8225,7 +8225,7 @@ Source: http://ww1.microchip.com/downloads/en/DeviceDoc/22049b.pdf</description>
 <wire x1="71.12" y1="48.26" x2="66.04" y2="48.26" width="0.1524" layer="91"/>
 <junction x="66.04" y="48.26"/>
 <wire x1="127" y1="55.88" x2="127" y2="0" width="0.1524" layer="91"/>
-<pinref part="HSTS016L" gate="A" pin="4"/>
+<pinref part="I-SENS" gate="A" pin="4"/>
 <wire x1="127" y1="0" x2="149.86" y2="0" width="0.1524" layer="91"/>
 <pinref part="R2" gate="G$1" pin="1"/>
 <wire x1="17.78" y1="7.62" x2="17.78" y2="0" width="0.1524" layer="91"/>
@@ -8284,7 +8284,7 @@ Source: http://ww1.microchip.com/downloads/en/DeviceDoc/22049b.pdf</description>
 <wire x1="86.36" y1="15.24" x2="66.04" y2="15.24" width="0.1524" layer="91"/>
 <wire x1="66.04" y1="15.24" x2="66.04" y2="27.94" width="0.1524" layer="91"/>
 <wire x1="124.46" y1="27.94" x2="124.46" y2="7.62" width="0.1524" layer="91"/>
-<pinref part="HSTS016L" gate="A" pin="1"/>
+<pinref part="I-SENS" gate="A" pin="1"/>
 <wire x1="124.46" y1="7.62" x2="149.86" y2="7.62" width="0.1524" layer="91"/>
 <pinref part="IC1" gate="G$1" pin="VO"/>
 <wire x1="63.5" y1="27.94" x2="66.04" y2="27.94" width="0.1524" layer="91"/>
@@ -8307,7 +8307,7 @@ Source: http://ww1.microchip.com/downloads/en/DeviceDoc/22049b.pdf</description>
 </net>
 <net name="N$7" class="0">
 <segment>
-<pinref part="U$1" gate="G$1" pin="IO21"/>
+<pinref part="ESP32" gate="G$1" pin="IO21"/>
 <wire x1="116.84" y1="73.66" x2="134.62" y2="73.66" width="0.1524" layer="91"/>
 <wire x1="134.62" y1="73.66" x2="134.62" y2="22.86" width="0.1524" layer="91"/>
 <wire x1="134.62" y1="22.86" x2="81.28" y2="22.86" width="0.1524" layer="91"/>
@@ -8318,7 +8318,7 @@ Source: http://ww1.microchip.com/downloads/en/DeviceDoc/22049b.pdf</description>
 </net>
 <net name="N$8" class="0">
 <segment>
-<pinref part="U$1" gate="G$1" pin="IO22"/>
+<pinref part="ESP32" gate="G$1" pin="IO22"/>
 <wire x1="116.84" y1="76.2" x2="129.54" y2="76.2" width="0.1524" layer="91"/>
 <wire x1="129.54" y1="76.2" x2="129.54" y2="25.4" width="0.1524" layer="91"/>
 <wire x1="129.54" y1="25.4" x2="78.74" y2="25.4" width="0.1524" layer="91"/>
@@ -8330,13 +8330,13 @@ Source: http://ww1.microchip.com/downloads/en/DeviceDoc/22049b.pdf</description>
 <net name="N$4" class="0">
 <segment>
 <pinref part="U$2" gate="G$1" pin="A0"/>
-<pinref part="HSTS016L" gate="A" pin="2"/>
+<pinref part="I-SENS" gate="A" pin="2"/>
 <wire x1="114.3" y1="5.08" x2="149.86" y2="5.08" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="N$6" class="0">
 <segment>
-<pinref part="HSTS016L" gate="A" pin="3"/>
+<pinref part="I-SENS" gate="A" pin="3"/>
 <wire x1="114.3" y1="2.54" x2="149.86" y2="2.54" width="0.1524" layer="91"/>
 <pinref part="U$2" gate="G$1" pin="A1"/>
 </segment>
@@ -8389,7 +8389,7 @@ Source: http://ww1.microchip.com/downloads/en/DeviceDoc/22049b.pdf</description>
 <wire x1="66.04" y1="40.64" x2="68.58" y2="40.64" width="0.1524" layer="91"/>
 <wire x1="68.58" y1="40.64" x2="68.58" y2="91.44" width="0.1524" layer="91"/>
 <wire x1="68.58" y1="91.44" x2="124.46" y2="91.44" width="0.1524" layer="91"/>
-<pinref part="U$1" gate="G$1" pin="VCC"/>
+<pinref part="ESP32" gate="G$1" pin="VCC"/>
 <wire x1="116.84" y1="63.5" x2="124.46" y2="63.5" width="0.1524" layer="91"/>
 <wire x1="124.46" y1="91.44" x2="124.46" y2="63.5" width="0.1524" layer="91"/>
 <pinref part="C4" gate="G$1" pin="1"/>
