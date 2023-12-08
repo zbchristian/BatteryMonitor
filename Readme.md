@@ -21,11 +21,14 @@ Hardware
 * Current sensor (Hall sensor to measure the magnetic field, or shunt resistor) 
 * Step-down regulator (DC-DC Buck converter)
   * Input: 10V-20V
-  * Output: 5V (fixed or adjustable)
+  * Output: 5.8V (adjustable version)
   * Max. current: 1A
 * ADS1115 16 bit ADC
 
-For a version utilizing the internal ADC, see the [Readme](Readme_internalADC.md)
+The 5.8V output voltage of the DC-DC converter is due to the fact, that the current sensor (Hall sensor) and the ADC require very stable 5V. 
+This is provided by the 5V regulator MCP1702/1703. The ESP32 module has its own 3.3V regulator and can handle up to 6V on the Vcc pin. 
+
+For a version utilizing the internal ADC, see the [Readme](Readme_internalADC.md).
 
 Current Sensor
 ==============

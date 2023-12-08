@@ -8087,7 +8087,7 @@ Source: http://ww1.microchip.com/downloads/en/DeviceDoc/22049b.pdf</description>
 <parts>
 <part name="ESP32" library="MH-ET_ESP32_D1_MINI" deviceset="MH-ET_ESP32_D1_MINI" device=""/>
 <part name="I-SENS" library="pinhead" deviceset="PINHD-1X4" device="/90" value="1"/>
-<part name="PWR" library="con-wago-500" deviceset="W237-102" device="" value="12V">
+<part name="BATTERY" library="con-wago-500" deviceset="W237-102" device="" value="12V">
 <attribute name="GND" value=""/>
 <attribute name="VIN" value="12V"/>
 </part>
@@ -8109,6 +8109,13 @@ Source: http://ww1.microchip.com/downloads/en/DeviceDoc/22049b.pdf</description>
 <sheets>
 <sheet>
 <plain>
+<text x="142.24" y="63.5" size="2.1844" layer="97">-The DC-DC converter should provide 5.5V
+ 
+- The ESP is powered with 5.5V
+
+- The increased voltage is needed in order for the 
+MCP1703 to provide stable 5V to the ADS1115 
+and the current sensor</text>
 </plain>
 <instances>
 <instance part="ESP32" gate="G$1" x="101.6" y="66.04" smashed="yes">
@@ -8119,11 +8126,11 @@ Source: http://ww1.microchip.com/downloads/en/DeviceDoc/22049b.pdf</description>
 <attribute name="NAME" x="146.05" y="10.795" size="1.778" layer="95"/>
 <attribute name="VALUE" x="146.05" y="-5.08" size="1.778" layer="96"/>
 </instance>
-<instance part="PWR" gate="-1" x="-7.62" y="43.18" smashed="yes">
+<instance part="BATTERY" gate="-1" x="-7.62" y="43.18" smashed="yes">
 <attribute name="VIN" x="-7.62" y="38.1" size="1.778" layer="96"/>
 <attribute name="NAME" x="-7.62" y="44.069" size="1.778" layer="95" rot="R180"/>
 </instance>
-<instance part="PWR" gate="-2" x="-7.62" y="48.26" smashed="yes">
+<instance part="BATTERY" gate="-2" x="-7.62" y="48.26" smashed="yes">
 <attribute name="GND" x="-7.62" y="50.8" size="1.778" layer="96" display="name"/>
 <attribute name="VALUE" x="-10.16" y="44.577" size="1.778" layer="96"/>
 <attribute name="NAME" x="-7.62" y="49.149" size="1.778" layer="95" rot="R180"/>
@@ -8252,7 +8259,7 @@ Source: http://ww1.microchip.com/downloads/en/DeviceDoc/22049b.pdf</description>
 <wire x1="22.86" y1="50.8" x2="25.4" y2="50.8" width="0.1524" layer="91"/>
 <pinref part="U$3" gate="G$1" pin="IN-@2"/>
 <wire x1="25.4" y1="48.26" x2="22.86" y2="48.26" width="0.1524" layer="91"/>
-<pinref part="PWR" gate="-2" pin="KL"/>
+<pinref part="BATTERY" gate="-2" pin="KL"/>
 <junction x="22.86" y="48.26"/>
 <wire x1="-2.54" y1="48.26" x2="22.86" y2="48.26" width="0.1524" layer="91"/>
 </segment>
@@ -8362,7 +8369,7 @@ Source: http://ww1.microchip.com/downloads/en/DeviceDoc/22049b.pdf</description>
 </net>
 <net name="N$1" class="0">
 <segment>
-<pinref part="PWR" gate="-1" pin="KL"/>
+<pinref part="BATTERY" gate="-1" pin="KL"/>
 <pinref part="D1" gate="G$1" pin="A"/>
 <wire x1="2.54" y1="43.18" x2="5.08" y2="43.18" width="0.1524" layer="91"/>
 <wire x1="-2.54" y1="43.18" x2="2.54" y2="43.18" width="0.1524" layer="91"/>
@@ -8421,4 +8428,10 @@ Source: http://ww1.microchip.com/downloads/en/DeviceDoc/22049b.pdf</description>
 </errors>
 </schematic>
 </drawing>
+<compatibility>
+<note version="6.3" minversion="6.2.2" severity="warning">
+Since Version 6.2.2 text objects can contain more than one line,
+which will not be processed correctly with this version.
+</note>
+</compatibility>
 </eagle>
