@@ -36,7 +36,12 @@ sixxxx - set the pre-shared pass phrase used for the hash value of the sign on m
 ghxxxx - get history data (xxxx = time window in secs, if 0 : send all data) 
 
 
-CZ July 2020
+THE BATTERY MONITOR DEBUG INFOS
+===============================
+Connect the ESP32 via USB to a computer and open a terminal program and connect to 
+the corresponding serial interface (e.g. COM port)
+
+CZ July 2020/2023
 
 */
 
@@ -120,7 +125,6 @@ unsigned long msLast=0;
 
 #define currentBin        0.05       // current only displayed in units of 50mA
 
-#define RSENSOR           1.        // scale factor for sensor voltage diff (sensor-reference)
 #define R12V              0.25      // measured - ideal 10/(10+30)=1/4
 
 #define chargeEff		      0.95	    // charging efficiency - AGM/GEL: ~95% , standard lead acid: ~80%
@@ -181,13 +185,21 @@ char txt[100];
 char *signOnText;
 #define lenSignOn  100
 
-double Vcal12(double v)         { return v-0.08; } // calibrated voltage of ADC 
+double Vcal12(double v)         { return v-0.05; } // calibrated voltage of ADC 
 double get12V(double v)         { return (Vcal12(v))/R12V; }
+
 #ifdef CURRENT_HALL
-double VcalSensor(double v)     { return v; } // Hall - calibrated voltage of Sensor measurement
-double V2Amps(double dV)        { return 26.1*dV; } // Hall sensor - calibrated voltage to current function
+// The Hall sensor requires calibration
+// - check the reference voltage (serial debug port) at 0 Amps and correct VcalSensor 
+double VcalSensor(double v)     { return v-0.0027; } // Hall - calibrated voltage of Sensor measurement
+// Voltage to current might not be completely linear, but this is ignored here
+double V2Amps(double dV)        { return 26.73*dV - 0.0; } // Hall sensor - calibrated voltage to current function
+
 #else
+// The Shunt sensor requires calibration
+// - check the reference voltage (serial debug port) at 0 Amps and correct VcalSensor 
 double VcalSensor(double v)     { return v+0.00014; } // Shunt - calibrated voltage of Sensor measurement
+// Voltage to current should be linear. Check marking on the shunt, e.g. 85mV @ 100A 
 double V2Amps(double dV)        { return 100/0.085*dV; } // Shunt - calibrated voltage to current function
 #endif
 double getCurrent(double Vdiff) { return V2Amps(VcalSensor(Vdiff)); }
@@ -518,7 +530,7 @@ void loop() {
 //    filtered12V = getADC_V(adc12V); 
     VBat = get12V(filtered12V);
     AmpsBat = getCurrent(filteredSensor);
-    sprintf(txt,"deltaTime %d, VBat %10.2f, Vsens %10.3f, Current %10.3f - ",deltaTime,VBat,filteredSensor*1000, AmpsBat);       
+    sprintf(txt,"deltaTime [ms] %d, VBat [V] %10.2f, Vsens [mV] %10.3f, Current [A] %10.3f - ",deltaTime,VBat,filteredSensor*1000, AmpsBat);       
     Serial.println(txt);
 
     AmpsBat = getCurrent(filteredSensor);

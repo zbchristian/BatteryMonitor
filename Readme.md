@@ -85,3 +85,29 @@ Concept
 - For the first 60 seconds the connection is possible without the passphrase
 - Data are send to the APP every second as a block of 20 bytes. The values are 16 bit integer values, which have been scaled to reflect the predefined number og significant digits. 
 
+Printout of the Device
+----------------------
+An USB connection to the ESP32 allows to view the status print out of the device. Connect a terminal program to the corresponding virtual serial port (e.g. COM port).
+The measured values and status infomrmations are printed to the terminal and allow to perform the calibration of the sensors.  
+
+
+Calibration
+===========
+The calibration of the battery voltage and current measurement is required.
+
+Battery Voltage
+---------------
+The measured voltage might vary due to resistor variations. The default voltage divider reduces the voltage by a factor of 0.25 ( 10k/(10k+30k) ). 
+This factor is defined as `R12V`.
+In addition a small voltage offset might be present. This should be measured with a good voltage meter and the corrections entered into the source code 
+function `Vcal12`.
+
+Current Sensor
+--------------
+A Hall sensor contains active components and the voltage to current conversion should be checked. An voltage offset leads to a none zero current displayed for 0 Amps.
+The printout messages on a connected terminal allows to compare the measured values with the applied voltage/current. Enter the corrected values into the functions `VcalSensor` and `V2Amps`. 
+Non linear dependencies might be entered into the latter function as well. 
+
+Misc
+====
+On the PCB three additional IO pins are available on pin headers (IO2, IO4, IO5). These are not yet utilized and can be used to attach more hardware.

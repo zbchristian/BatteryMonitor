@@ -9237,7 +9237,7 @@ Source: AVX .. aphvc.pdf</description>
 </part>
 <part name="U$2" library="monitor_components" deviceset="ADS1115" device="MINI-MODULE"/>
 <part name="U$3" library="monitor_components" deviceset="DCDC-MINI" device=""/>
-<part name="R1" library="eagle-ltspice" deviceset="R" device="R1206" value="33k"/>
+<part name="R1" library="eagle-ltspice" deviceset="R" device="R1206" value="30k"/>
 <part name="R2" library="eagle-ltspice" deviceset="R" device="R1206" value="10k"/>
 <part name="C1" library="rcl" deviceset="C-EU" device="C1206" value="100n"/>
 <part name="C2" library="rcl" deviceset="C-EU" device="C1206" value="1u"/>
@@ -9266,7 +9266,13 @@ Source: AVX .. aphvc.pdf</description>
 
 - The increased voltage is needed in order for the 
 MCP1703 to provide stable 5V to the ADS1115 
-and the current sensor</text>
+and the current sensor
+
+- Comment: the increased voltage depends on the drop-out voltage of the used regulator
+  MCP1703 Vdo=650mV -&gt; provide 5.8V
+  MCP1754 Vdo=300mV -&gt; provide 5.5V
+
+  </text>
 </plain>
 <instances>
 <instance part="ESP32" gate="G$1" x="101.6" y="71.12" smashed="yes">
