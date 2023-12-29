@@ -32,7 +32,7 @@ s000 - set current capacity to 0% (empty)
 scxxxxxx - set nominal capacity to xxxxxx/10 Ah
 s%xxxx - set percentage of the current capacity to xxxx/10% (e.g. s%785 -> 78.5%)
 soxxxx - set the current offset in milli Amps
-sixxxx - set the pre-shared pass phrase used for the hash value of the sign on message
+sixxxx - set the pre-shared pass phrase used for the hash value of the sign on message (max 9 characters)
 ghxxxx - get history data (xxxx = time window in secs, if 0 : send all data) 
 
 
@@ -120,7 +120,7 @@ DRAM_ATTR unsigned long msTime;
 unsigned long deltaTime=0;
 unsigned long msLast=0;
 
-#define DefaultSignOnMsg  "123456"   // pre-shared message for which a sha256 hash is send by the client
+#define DefaultSignOnMsg  "123456"   // pre-shared message (max 9 characters) for which a sha256 hash is send by the client
 #define maxSignonLen      10
 
 #define currentBin        0.05       // current only displayed in units of 50mA
@@ -133,10 +133,11 @@ unsigned long msLast=0;
 #define doSave            30000 // ms to save data to EPPROM 
 #define doADC             300   // ms to read data from ADC
 #define doLED             350   // ms to toggle the LED 
-#define doBLE             2000   // ms to send data over BLE
-#define waitSignon        2000 // ms to wait for the signon message
+#define doBLE             2000  // ms to send data over BLE
+#define doSleep           10    // ms to sleep in LOOP
+#define waitSignon        2000  // ms to wait for the signon message
 
-#define timeNoSignon 60000 // ms to wait for a connection without signon message (starts when button is pressed)
+#define timeNoSignon 60000 // ms to wait for a connection without signon message (starts when button is pressed or after reset)
 
 DRAM_ATTR boolean   isSave=false;
 DRAM_ATTR boolean   isADC=false;
@@ -267,9 +268,9 @@ bool checkSignon() {
   hashSHA256(txt2hash,len,sha256Res);
   for(int i= 0; i<32; i++) sprintf(&sha256hash[i*2], "%02x", (int)sha256Res[i]);
   sha256hash[64]='\0';
-//  Serial.println();
-//  Serial.println(strhash);
-//  Serial.println(sha256hash);
+  Serial.println();
+  Serial.println(strhash);
+  Serial.println(sha256hash);
   if (strcmp(strhash,sha256hash)==0) {
     timemillisecs = timems;
     return true;  
@@ -299,18 +300,26 @@ void receiveSignon(char *txt, int txtlen) {
   }
 }
 
+void BLEAdvertise() {
+    // Start advertising
+  pServer->getAdvertising()->start();
+  Serial.println("Waiting for a client connection ...");
+  isNoSignon=false;
+}
+
 class MyServerCallbacks: public BLEServerCallbacks {
     void onConnect(BLEServer* pServer) {
-      Serial.print("Client connects");
+      Serial.println("Client connects");
       deviceConnected = true;
       signOnText[0]='\0';
       isValidClient = isNoSignon;
     };
 
     void onDisconnect(BLEServer* pServer) {
-      Serial.print("Client disconnects");
+      Serial.println("Client disconnects");
       deviceConnected = false;
       isValidClient = false;
+      BLEAdvertise();
     }
 };
 
@@ -363,11 +372,13 @@ class MyCallbacks: public BLECharacteristicCallbacks {
                Serial.println(BatIoff);
             } else if(rx.compare(0,2,"gh") == 0) { // received get history command
                sendHistory();
-            } else if(rx.compare(0,2,"si") == 0 && isNoSignon) { // received set new signon message and correct mode (button pressed)
-               ncharSignon = atoi(rx.substr(2,2).c_str());  // 2 digits to set the length of the message
-               isReceiveSignon = ncharSignon > 0 && ncharSignon <= maxSignonLen;
+            } else if(rx.compare(0,2,"si") == 0 ) { //&& isNoSignon) { // received set new signon message and correct mode (button pressed)
+               ncharSignon = atoi(rx.substr(2,1).c_str());  // 1 digit to set the length of the message
+               isReceiveSignon = ncharSignon > 0 && ncharSignon < maxSignonLen;
                signOnText[0] = '\0';
-               receiveSignon((char*)rx.substr(4).c_str(), (int)rx.length()-4);
+               Serial.print("Store new signon message of length ");
+               Serial.println(ncharSignon);
+               receiveSignon((char*)rx.substr(3).c_str(), (int)rx.length()-3);
             }
           }
         }
@@ -379,7 +390,7 @@ void setup() {
 
   setCpuFrequencyMhz(80); //Set CPU clock to 80MHz to save power
   
-  Serial.begin(115200);
+  Serial.begin(115200
 
   pinMode(LED, OUTPUT);
 
@@ -400,7 +411,7 @@ void setup() {
   // init ADC
   Wire.begin();
   if(!adc.init()){
-    Serial.println("Now ADC found - ADS1115 not connected!");
+    Serial.println("No ADC found - ADS1115 not connected!");
   }
   adc.setVoltageRange_mV(RangeSensor);
   adc.setCompareChannels(ADS1115_COMP_0_1);
@@ -448,8 +459,7 @@ void setup() {
   pService->start();
 
   // Start advertising
-  pServer->getAdvertising()->start();
-  Serial.println("Waiting for a client connection ...");
+  BLEAdvertise();
   countNoSignon=timeNoSignon;
   isNoSignon=true;
 }
@@ -505,6 +515,7 @@ double getFilteredVoltage( double volti, double volts ) {
 
 int nAvr=0;
 double eff;
+
 void loop() {
 
   if( isSave ) {
@@ -530,7 +541,7 @@ void loop() {
 //    filtered12V = getADC_V(adc12V); 
     VBat = get12V(filtered12V);
     AmpsBat = getCurrent(filteredSensor);
-    sprintf(txt,"deltaTime [ms] %d, VBat [V] %10.2f, Vsens [mV] %10.3f, Current [A] %10.3f - ",deltaTime,VBat,filteredSensor*1000, AmpsBat);       
+    sprintf(txt,"Time diff [ms] %d, VBat [V] %10.2f, Vsens [mV] %10.3f, Current [A] %10.3f - ",deltaTime,VBat,filteredSensor*1000, AmpsBat);       
     Serial.println(txt);
 
     AmpsBat = getCurrent(filteredSensor);
@@ -603,19 +614,10 @@ void loop() {
     txValue[7] = scale16(statWh[2],1); // transmit with 0 digits precision
     txValue[8] = scale16(statWh[3],1); // transmit with 0 digits precision
 
-//    delay(100); // wait a bit
     pCharacteristic_tx->setValue((uint8_t*)txValue,20); // To send 10 uint16 values
     pCharacteristic_tx->notify(); // Send the values to the app!
 
-//    Serial.print("*** Goto sleep ...");
-//    esp_sleep_enable_timer_wakeup(100*1000);
-//    delay(10);
-//    int err=esp_light_sleep_start();
-//    Serial.print(" back from sleep err=");
-//    Serial.println(err);
-//    delay(1000);
-
-    //    pCharacteristic_tx->setValue("Hello!"); // Sending a test message
+//    pCharacteristic_tx->setValue("Hello!"); // Sending a test message
 //    pCharacteristic_tx->setValue(txt);
 //    if(isSetSignonOK) {
 //      pCharacteristic_tx->setValue("siOK"); // acknowledge reception 
@@ -630,8 +632,9 @@ void loop() {
     deviceConnected = false;
     countSignon = 0;
   }
-  delay(10);
+  delay(doSleep);
 }
+
 const int n1h  =  1*60*60*1000/histBin; // # vals to integrate for 1h 
 const int n6h  =  6*60*60*1000/histBin; // # vals to integrate for 6h 
 const int n12h = 12*60*60*1000/histBin; // # vals to integrate for 12h 
