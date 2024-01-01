@@ -10,7 +10,7 @@ of a camper/mobil home 12V battery on an Android Smartphone.
 The monitor is based on three modules (DC-DC converter, ESP32, ADS1115), which are placed either on a bread board or a PCB. 
 The schematic and the layout of this base board can be found in the Eagle folder.
 
-The device pulls about 35mA from the 12V battery. 
+The device pulls about 30mA from the 12V battery. An additional 8-9mA are drawn by the Hall current sensor.
 
 ![Prototype](images/BatteryMonitorADS1115_500px.jpg?raw=true "Prototype of the Battery Monitor")
 ![Prototype with Hall sensor](images/BatteryMonitorADS1115-Hall_500px.jpg?raw=true "Prototype of the Battery Monitor with split core current sensor")

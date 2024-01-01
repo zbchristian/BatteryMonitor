@@ -113,8 +113,6 @@ const ADS1115_RANGE RangeSensor = ADS1115_RANGE_0256;
 #define BUTTON  GPIO_NUM_0   // this is the boot button - NOT AVAILABLE in ESP32 mini modules
 
 hw_timer_t * msTimer = NULL;
-//hw_timer_t * timerADC = NULL;
-//hw_timer_t * timerLED = NULL;
 
 DRAM_ATTR unsigned long msTime;
 unsigned long deltaTime=0;
@@ -134,7 +132,7 @@ unsigned long msLast=0;
 #define doADC             300   // ms to read data from ADC
 #define doLED             350   // ms to toggle the LED 
 #define doBLE             2000  // ms to send data over BLE
-#define doSleep           10    // ms to sleep in LOOP
+#define doDelay           10    // ms to sleep in LOOP
 #define waitSignon        2000  // ms to wait for the signon message
 
 #define timeNoSignon 60000 // ms to wait for a connection without signon message (starts when button is pressed or after reset)
@@ -151,6 +149,7 @@ DRAM_ATTR boolean   isNoSignon;
 DRAM_ATTR int       ncharSignon;
 DRAM_ATTR boolean   isReceiveSignon;
 
+float  fCPU;  // CPU frequency in MHz
 
 double filtered12V = -1.0;
 double filteredSensor= -1.0;
@@ -300,10 +299,15 @@ void receiveSignon(char *txt, int txtlen) {
   }
 }
 
-void BLEAdvertise() {
+void BLEAdvertise(bool isStart) {
+  if (isStart) {
     // Start advertising
-  pServer->getAdvertising()->start();
-  Serial.println("Waiting for a client connection ...");
+    pServer->getAdvertising()->start();
+    Serial.println("Waiting for a client connection ...");
+  } else {
+    pServer->getAdvertising()->stop();
+    Serial.println("Stopped BLE advertisment ...");
+  }
   isNoSignon=false;
 }
 
@@ -319,7 +323,7 @@ class MyServerCallbacks: public BLEServerCallbacks {
       Serial.println("Client disconnects");
       deviceConnected = false;
       isValidClient = false;
-      BLEAdvertise();
+      BLEAdvertise(true);
     }
 };
 
@@ -372,7 +376,7 @@ class MyCallbacks: public BLECharacteristicCallbacks {
                Serial.println(BatIoff);
             } else if(rx.compare(0,2,"gh") == 0) { // received get history command
                sendHistory();
-            } else if(rx.compare(0,2,"si") == 0 ) { //&& isNoSignon) { // received set new signon message and correct mode (button pressed)
+            } else if(rx.compare(0,2,"si") == 0 ) { // received set new signon message 
                ncharSignon = atoi(rx.substr(2,1).c_str());  // 1 digit to set the length of the message
                isReceiveSignon = ncharSignon > 0 && ncharSignon < maxSignonLen;
                signOnText[0] = '\0';
@@ -389,8 +393,8 @@ class MyCallbacks: public BLECharacteristicCallbacks {
 void setup() {
 
   setCpuFrequencyMhz(80); //Set CPU clock to 80MHz to save power
-  
-  Serial.begin(115200
+
+  Serial.begin(115200);
 
   pinMode(LED, OUTPUT);
 
@@ -398,7 +402,7 @@ void setup() {
   countNoSignon=ncharSignon;
   isNoSignon=isReceiveSignon=false; 
     
-  Serial.print("CPU Freq "); Serial.println(getCpuFrequencyMhz()); //Get CPU clock
+  Serial.print("CPU Freq "); Serial.println(fCPU=getCpuFrequencyMhz()); //Get CPU clock
 
 
   msTime = 0;
@@ -459,9 +463,23 @@ void setup() {
   pService->start();
 
   // Start advertising
-  BLEAdvertise();
+  BLEAdvertise(true);
   countNoSignon=timeNoSignon;
   isNoSignon=true;
+
+  Serial.println("Setup done ...");
+
+}
+
+void BlinkLED() {
+  if( isLED ) {
+    if(deviceConnected || isNoSignon) {
+      if(digitalRead(LED) == HIGH) digitalWrite(LED, LOW); 
+      else digitalWrite(LED, HIGH);
+    } 
+    else digitalWrite(LED, LOW);
+    isLED = false;  
+  }
 }
 
 // routine called once every 1ms 
@@ -472,6 +490,7 @@ void IRAM_ATTR SetTime() {
   isADC   = isADC  || (msTime%doADC) == 0;
   if(isNoSignon) isLED   = isLED  || (msTime%(doLED*2)) == 0;
   else           isLED   = isLED  || (msTime%doLED) == 0;
+  if (isLED) BlinkLED();
   isBLE   = isBLE  || (msTime%doBLE) == 0;
   isAVR   = isAVR  || (msTime%histBin) == 0;
   if (deviceConnected && !isValidClient) ++countSignon;
@@ -488,8 +507,8 @@ void IRAM_ATTR SetTime() {
 void setupTimer() {
   noInterrupts();           // disable all interrupts
 
-// timer 1  to set the timer in milli seconds
-  msTimer = timerBegin(1, 80, true);    // timer 1 - 1usec resolution
+// timer to set the timer in milli seconds
+  msTimer = timerBegin(1, fCPU, true);    // timer 1 - 1usec resolution
   timerAttachInterrupt(msTimer, &SetTime, true);  
   timerAlarmWrite(msTimer, 1000, true); // trigger once per milli second  
   timerAlarmEnable(msTimer);
@@ -521,16 +540,6 @@ void loop() {
   if( isSave ) {
     persistentBatCapacity(false); // write current values to EEPROM
     isSave = false;  
-//    Serial.println("store values to EEPROM");
-  }
-
-  if( isLED ) {
-    if(deviceConnected || isNoSignon) {
-      if(digitalRead(LED) == HIGH) digitalWrite(LED, LOW); 
-      else digitalWrite(LED, HIGH);
-    } 
-    else digitalWrite(LED, LOW);
-    isLED = false;  
   }
 
   if( isADC) {
@@ -538,7 +547,6 @@ void loop() {
     msLast = msTime;
     filtered12V = getFilteredVoltage( getADC_V(adc12V, RangeV12), filtered12V ); 
     filteredSensor = getFilteredVoltage( getADC_V(adcSensor, RangeSensor), filteredSensor ); 
-//    filtered12V = getADC_V(adc12V); 
     VBat = get12V(filtered12V);
     AmpsBat = getCurrent(filteredSensor);
     sprintf(txt,"Time diff [ms] %d, VBat [V] %10.2f, Vsens [mV] %10.3f, Current [A] %10.3f - ",deltaTime,VBat,filteredSensor*1000, AmpsBat);       
@@ -632,7 +640,7 @@ void loop() {
     deviceConnected = false;
     countSignon = 0;
   }
-  delay(doSleep);
+  delay(doDelay);
 }
 
 const int n1h  =  1*60*60*1000/histBin; // # vals to integrate for 1h 
