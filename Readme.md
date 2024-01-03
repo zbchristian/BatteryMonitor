@@ -7,7 +7,10 @@ Measure and display the
 
 of a camper/mobil home 12V battery on an Android Smartphone.
 
-The monitor is based on three modules (DC-DC converter, ESP32, ADS1115), which are placed either on a bread board or a PCB. The schematic and the layout of this base board can be found in the Eagle folder.
+The monitor is based on three modules (DC-DC converter, ESP32, ADS1115), which are placed either on a bread board or a PCB. 
+The schematic and the layout of this base board can be found in the Eagle folder.
+
+The device pulls about 30mA from the 12V battery. An additional 8-9mA are drawn by the Hall current sensor.
 
 ![Prototype](images/BatteryMonitorADS1115_500px.jpg?raw=true "Prototype of the Battery Monitor")
 ![Prototype with Hall sensor](images/BatteryMonitorADS1115-Hall_500px.jpg?raw=true "Prototype of the Battery Monitor with split core current sensor")
@@ -83,10 +86,10 @@ Concept
 - A sign-on message is expected by the ESP32. This is a hash value of the current time (salt) and a pre-shared pass phrase. 
 - If the message is not received, the BLE connection is terminated.
 - For the first 60 seconds the connection is possible without the passphrase
-- Data are send to the APP every second as a block of 20 bytes. The values are 16 bit integer values, which have been scaled to reflect the predefined number og significant digits. 
+- Data are send to the APP every second as a block of 20 bytes. The values are 16 bit integer values, which have been scaled to reflect the predefined number of significant digits. 
 
-Printout of the Device
-----------------------
+Status Printout of the Device
+-----------------------------
 An USB connection to the ESP32 allows to view the status print out of the device. Connect a terminal program to the corresponding virtual serial port (e.g. COM port).
 The measured values and status infomrmations are printed to the terminal and allow to perform the calibration of the sensors.  
 
@@ -110,4 +113,5 @@ Non linear dependencies might be entered into the latter function as well.
 
 Misc
 ====
-On the PCB three additional IO pins are available on pin headers (IO2, IO4, IO5). These are not yet utilized and can be used to attach more hardware.
+On the PCB three additional IO pins are available on pin headers (IO2, IO4, IO5). These are not yet utilized and can be used to attach more hardware. The pin header for 
+IO5 provides in addition 3.3V, which can be used to connect an active touch button (e.g. based on the TTP223 chip).  
