@@ -128,7 +128,7 @@ unsigned long msLast=0;
 
 #define R12V              0.25        // measured - ideal 10/(10+30)=1/4
 
-#define chargeEff		      0.95	      // charging efficiency - AGM/GEL: ~95% , standard lead acid: ~80%
+#define chargeEff             0.95        // charging efficiency - AGM/GEL: ~95% , standard lead acid: ~80%
 
 // define time (ms) between the execution of certains functional codes
 // values need to be consistent with the chosen T_SCALE value
@@ -323,14 +323,14 @@ void BLEAdvertise(bool isStart) {
 
 // Ensure, that BLE Advertisement is only flagged as disabled after the stop process has finished
 static void GAPEventHandler( esp_gap_ble_cb_event_t  event, esp_ble_gap_cb_param_t* param)  {
-	switch(event) {
-		case ESP_GAP_BLE_ADV_STOP_COMPLETE_EVT: 
-      isBLEAdv=false;
-			break;
+  switch(event) {
+      case ESP_GAP_BLE_ADV_STOP_COMPLETE_EVT: 
+        isBLEAdv=false;
+        break;
 
-		default:
-			break;
-	}
+      default:
+        break;
+    }
 }
 
 class MyServerCallbacks: public BLEServerCallbacks {
@@ -635,7 +635,7 @@ void loop() {
 
     AmpsBat = getCurrent(filteredSensor);
     AmpsBat = (long)(AmpsBat/currentBin)*currentBin - BatIoff;
-    eff = sign(AmpsBat)<0 ? 1.0 : chargeEff;	// take efficiency of charging (I>0) into account
+    eff = sign(AmpsBat)<0 ? 1.0 : chargeEff;    // take efficiency of charging (I>0) into account
     BatCap += AmpsBat*deltaTime/1000/3600.0*eff; // calculate the change of the battery capacity
     if ( BatCap <= 0.0) BatCap = 0.0;
 

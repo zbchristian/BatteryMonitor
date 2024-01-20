@@ -72,7 +72,7 @@ Software
 ========
 The Arduino IDE is used for the code development. 
 Three different versions of the ESP32 firmware exist:
-- Utilize the internal ADC ([code](./BatteryMonitor_internal/BatteryMonitor_internal.ino))
+- Utilize the internal ADC ([code](./BatteryMonitor_internal_ADC/BatteryMonitor_internal_ADC.ino))
 - Utilize an ADS1115 external ADC ([code](./BatteryMonitor_ADS1115/BatteryMonitor_ADS1115.ino))
 - UTilize an ADS1115 external ADC and reduce the power by going into the light sleep mode of the ESP32 The ([code](./BatteryMonitor_lowpower/BatteryMonitor_lowpower.ino))
 
