@@ -99,8 +99,9 @@ actions (reading the voltage/current value, calculate battery capacity, transmit
 
 The third version handles the timing once per LOOP iteration. 
 The LOOP is running once per 100msec and the corresponding delay is done in idle mode (no BT connection) by the light sleep mode of the ESP32. This reduces the 
-required power substantially from about 25mA down below 10mA @ 12V, but requires, that the BT is disabled prior to entering the sleep mode. 
+required power substantially from about 25mA down to approx 8mA @ 12V, but requires, that the BT is disabled prior to entering the sleep mode. 
 Therefore the BT connection is switched off for 5sec and switched on again for 1sec. As a consequence the connection initiated by a phone will take up to 5sec.
+In addition the CPU frequency is reduced while BT is switched off.
 
 Status Printout of the Device
 -----------------------------

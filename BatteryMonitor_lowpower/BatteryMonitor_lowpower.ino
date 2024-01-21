@@ -5,8 +5,8 @@ BATTERY MONITOR WITH CURRENT SPLIT CORE WITH HALL SENSOR
 Sensor model YHDC HSTS016L or a shunt resistor
 
 Power consumption (ESP32+ADC+DC/DC Conv) 
-  Idle:                 < 10 mA @ 12V (BT off for 5s, BT on for 1s and light sleep used for delay)
-  With BLE connection:  < 25 mA @ 12V
+  Idle:                    8 mA @ 12V (BT off and reduced CPU speed for 5s, BT on for 1s and light sleep used for delay)
+  With BLE connection:    25 mA @ 12V
 
 Hall sensors adds another 8-9 mA
 
@@ -115,11 +115,9 @@ const ADS1115_RANGE RangeSensor = ADS1115_RANGE_0256;
 #define LED     LED_BUILTIN
 #define BUTTON  GPIO_NUM_0   // this is the boot button - NOT AVAILABLE in ESP32 mini modules
 
-hw_timer_t * msTimer = NULL;
-
-DRAM_ATTR unsigned long msTime;
-unsigned long deltaTime=0;
-unsigned long msLast=0;
+uint64_t msTime;
+uint64_t deltaTime=0;
+uint64_t msLast=0;
 
 #define DefaultSignOnMsg  "123456"    // pre-shared message (max 9 characters) for which a sha256 hash is send by the client
 #define maxSignonLen      10          // max lenght of the pre-shared secret
@@ -311,11 +309,13 @@ void BLEAdvertise(bool isStart) {
   if (!pServer) return;
   if (isStart) {
     isBLEAdv = true;
+    setCpuFrequencyMhz(80); // 80Mhz required for BT operation
+    Serial.begin(115200);   // adjust baud rate for changed frequency
     pServer->getAdvertising()->start();
     Serial.printf("BLE: Waiting for a client connection ...%d ms\n", rtc_get_msecs());
   } else {
     pServer->getAdvertising()->stop();
-    Serial.printf("BLE: Disable advertisment ... %d ms\n", rtc_get_msecs());
+    Serial.printf("BLE: Disable advertisement ... %d ms\n", rtc_get_msecs());
 //    isBLEAdv = false is set in callback function
   }
   isNoSignon=false;
@@ -326,6 +326,8 @@ static void GAPEventHandler( esp_gap_ble_cb_event_t  event, esp_ble_gap_cb_param
   switch(event) {
       case ESP_GAP_BLE_ADV_STOP_COMPLETE_EVT: 
         isBLEAdv=false;
+        setCpuFrequencyMhz(20); // BT not active -> lower freq to save power
+        Serial.begin(115200); // adjust the serial baud rate for the new frquency
         break;
 
       default:
@@ -463,17 +465,18 @@ TaskHandle_t SwitchBT;
 // the ESP will go into light sleep, which srews up all delays. Therefore the rtc counter is used 
 void SwitchBLE(void *p) {
   bool BT_active;
-  unsigned long BT_tlast, timeMS;
+  uint64_t BT_tLast, tNow, timeMS;
   
   Serial.println("BT Switcher starting ...");
-  BT_tlast = rtc_time_get();
+  BT_tLast = rtc_time_get();
   timeMS = timeNoSignon;
 
   do {            // endless loop
-    if ( (rtc_time_get()-BT_tlast)/RTC_FREQ > timeMS ) {
+    if ( (tNow=rtc_time_get()) < BT_tLast  ) BT_tLast = tNow;   // check for overflow
+    if ( (tNow-BT_tLast)/RTC_FREQ > timeMS ) {
       timeMS = isBLEAdv ? timeBLEOff : timeBLEOn;
       if ( !deviceConnected && !isNoSignon) BLEAdvertise(!isBLEAdv);
-      BT_tlast = rtc_time_get();
+      BT_tLast = rtc_time_get();
     }
   } while(true);  // endless loop
 }
@@ -576,12 +579,12 @@ double getFilteredVoltage( double volti, double volts ) {
 // The main LOOP should run once every T_SCALE milli secs.
 
 void CheckTime() {
-  unsigned long tNow;
-  tNow = rtc_get_msecs();
+  uint64_t tNow;
+  if ( (tNow = rtc_get_msecs()) < msTime ) msTime = tNow;   // check for overflow
   if ( (tNow-msTime) < T_SCALE ) delaySleep( 1 + (T_SCALE - (tNow % T_SCALE)) );
 
   msTime=rtc_get_msecs();
-  unsigned long scaledTime = msTime/T_SCALE;  // scale to needed precision 
+  uint64_t scaledTime = msTime/T_SCALE;  // scale to needed precision 
 
   // Which activity should run?
   isSave  = scaledTime%(doSave/T_SCALE) == 0;
