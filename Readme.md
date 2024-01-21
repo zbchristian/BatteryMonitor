@@ -97,11 +97,13 @@ The versions differ mainly in the way the timing is handled.
 The first two versions utilize a 1msec timer interrupt to define time intervals and trigger time dependent 
 actions (reading the voltage/current value, calculate battery capacity, transmit via BT). 
 
-The third version handles the timing once per LOOP iteration. 
-The LOOP is running once per 100msec and the corresponding delay is done in idle mode (no BT connection) by the light sleep mode of the ESP32. This reduces the 
-required power substantially from about 25mA down to approx 8mA @ 12V, but requires, that the BT is disabled prior to entering the sleep mode. 
-Therefore the BT connection is switched off for 5sec and switched on again for 1sec. As a consequence the connection initiated by a phone will take up to 5sec.
-In addition the CPU frequency is reduced while BT is switched off.
+The third version handles the timing once per loop() iteration: 
+- the loop is running once every 100msec
+- the corresponding delay is done either as a standard delay (BT activated) or by the ´light sleep´ mode (BT off) of the ESP32. 
+These states are alternating with 5sec BT off and 1sec BT on until a phone connects.
+- while BT is off, the CPU frequency is reduced from 80 Mhz down to 20 MHz, which saves an additional 3-4mA @ 12V
+
+In total this reduces the required current from about 25mA down to approx 4mA @ 12V, when the device is in idle mode (BT off). 
 
 Status Printout of the Device
 -----------------------------
