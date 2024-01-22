@@ -10,7 +10,7 @@ of a camper/mobil home 12V battery on an Android Smartphone.
 The monitor is based on three modules (DC-DC converter, ESP32, ADS1115), which are placed either on a bread board or a PCB. 
 The schematic and the layout of this base board can be found in the Eagle folder.
 
-The device pulls about 30mA from the 12V battery. An additional 8-9mA are drawn by the Hall current sensor.
+Depending on the used firmware, the device pulls about 10mA (25mA) from the 12V battery. An additional 8-9mA are drawn by the Hall current sensor.
 
 ![Prototype](images/BatteryMonitorADS1115_500px.jpg?raw=true "Prototype of the Battery Monitor")
 ![Prototype with Hall sensor](images/BatteryMonitorADS1115-Hall_500px.jpg?raw=true "Prototype of the Battery Monitor with split core current sensor")
@@ -70,7 +70,11 @@ Developed with the MIT App-Inventor2
 
 Software
 ========
-The Arduino IDE is used for the code development. The [code](./BatteryMonitor_ADS1115/BatteryMonitor_ADS1115.ino) consists of a single file.
+The Arduino IDE is used for the code development. 
+Three different versions of the ESP32 firmware exist:
+- Utilize the internal ADC ([code](./BatteryMonitor_internal_ADC/BatteryMonitor_internal_ADC.ino))
+- Utilize an ADS1115 external ADC ([code](./BatteryMonitor_ADS1115/BatteryMonitor_ADS1115.ino))
+- UTilize an ADS1115 external ADC and reduce the power by going into the light sleep mode of the ESP32 The ([code](./BatteryMonitor_lowpower/BatteryMonitor_lowpower.ino))
 
 Requires packages
 -----------------
@@ -81,12 +85,25 @@ Concept
 -------
 - Settings: define time intervals and used channels in the `#define` section of the code
 - Setup: reduce CPU clock to save power, setup timers and the external ADC
-- Loop: interrupt every 1ms to determine the required action. Read the battery voltage and current, calculate the Ah and power and store current battery state to flash
+- Loop: Read the battery voltage and current, calculate the Ah and power and store current battery state to flash
 - The BLE connection is initialized by the phone
 - A sign-on message is expected by the ESP32. This is a hash value of the current time (salt) and a pre-shared pass phrase. 
 - If the message is not received, the BLE connection is terminated.
 - For the first 60 seconds the connection is possible without the passphrase
 - Data are send to the APP every second as a block of 20 bytes. The values are 16 bit integer values, which have been scaled to reflect the predefined number of significant digits. 
+
+The versions differ mainly in the way the timing is handled. 
+
+The first two versions utilize a 1msec timer interrupt to define time intervals and trigger time dependent 
+actions (reading the voltage/current value, calculate battery capacity, transmit via BT). 
+
+The third version handles the timing once per loop() iteration: 
+- the loop is running once every 100msec
+- the corresponding delay is done either as a standard delay (BT activated) or by the ´light sleep´ mode (BT off) of the ESP32. 
+These states are alternating with 5sec BT off and 1sec BT on until a phone connects.
+- while BT is off, the CPU frequency is reduced from 80 Mhz down to 20 MHz, which saves an additional 3-4mA @ 12V
+
+In total this reduces the required current from about 25mA down to approx 4mA @ 12V, when the device is in idle mode (BT off). 
 
 Status Printout of the Device
 -----------------------------
