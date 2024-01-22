@@ -5,7 +5,7 @@ BATTERY MONITOR WITH CURRENT SPLIT CORE WITH HALL SENSOR
 Sensor model YHDC HSTS016L or a shunt resistor
 
 Power consumption (ESP32+ADC+DC/DC Conv) 
-  Idle:                    8 mA @ 12V (BT off and reduced CPU speed for 5s, BT on for 1s and light sleep used for delay)
+  Idle:                    8 mA @ 12V (BT off, reduced CPU speed, light sleep for 5s (4mA), standard mode with BT on for 1s (25mA) )
   With BLE connection:    25 mA @ 12V
 
 Hall sensors adds another 8-9 mA
@@ -327,7 +327,7 @@ static void GAPEventHandler( esp_gap_ble_cb_event_t  event, esp_ble_gap_cb_param
       case ESP_GAP_BLE_ADV_STOP_COMPLETE_EVT: 
         isBLEAdv=false;
         setCpuFrequencyMhz(20); // BT not active -> lower freq to save power
-        Serial.begin(115200); // adjust the serial baud rate for the new frquency
+        Serial.begin(115200); // adjust the serial baud rate for the new frequency
         break;
 
       default:
@@ -462,21 +462,21 @@ void BLEStop() {
 
 TaskHandle_t SwitchBT;
 // Switch BLE advertisement off for a given time to save energy
-// the ESP will go into light sleep, which srews up all delays. Therefore the rtc counter is used 
+// the ESP will go into light sleep, which screws up all delays. Therefore the rtc counter is used 
 void SwitchBLE(void *p) {
   bool BT_active;
-  uint64_t BT_tLast, tNow, timeMS;
+  uint64_t tLast, tNow, timeMS;
   
   Serial.println("BT Switcher starting ...");
-  BT_tLast = rtc_time_get();
+  tLast = rtc_time_get();
   timeMS = timeNoSignon;
 
   do {            // endless loop
-    if ( (tNow=rtc_time_get()) < BT_tLast  ) BT_tLast = tNow;   // check for overflow
-    if ( (tNow-BT_tLast)/RTC_FREQ > timeMS ) {
+    if ( (tNow=rtc_time_get()) < tLast  ) tLast = tNow;   // check for overflow
+    if ( (tNow-tLast)/RTC_FREQ > timeMS ) {
       timeMS = isBLEAdv ? timeBLEOff : timeBLEOn;
       if ( !deviceConnected && !isNoSignon) BLEAdvertise(!isBLEAdv);
-      BT_tLast = rtc_time_get();
+      tLast = rtc_time_get();
     }
   } while(true);  // endless loop
 }
