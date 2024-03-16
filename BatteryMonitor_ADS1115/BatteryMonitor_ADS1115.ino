@@ -344,7 +344,7 @@ class MyCallbacks: public BLECharacteristicCallbacks {
         } else if (isReceiveSignon && isNoSignon) { // collecting a new signon message
           receiveSignon((char*)rx.substr(0).c_str(),(int)rx.length());
         } else {  // valid connection          
-          unsigned int val;
+          long val;
           if(rx.compare(0,1,"s") == 0 || rx.compare(0,1,"g") == 0 ) {  // its a set/get command
             // retrieve the value
             val = atoi(rx.substr(2).c_str());
@@ -369,7 +369,7 @@ class MyCallbacks: public BLECharacteristicCallbacks {
                BatCap = 0.0;
                persistentBatCapacity(false);
                clearStats();              
-            } else if(rx.compare(0,2,"so") == 0) { // received set current offset command
+            } else if(rx.compare(0,2,"so") == 0 && val >= -500 && val <= 500) { // received set current offset command
                BatIoff=val/1000.;  // current offset given in mA
                persistentBatCapacity(false);
                Serial.print(" BatIoff = ");
